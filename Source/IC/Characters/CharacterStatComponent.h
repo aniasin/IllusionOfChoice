@@ -25,11 +25,11 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Stat")
-		float HealthMax;
+		float HealthMax = 100;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Stat")
-		float HealthCurrent;
+		float HealthCurrent = 100;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Stat")
-		float SpeedMax;
+		float SpeedMax = 100;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Stat")
-		float SpeedCurrent;
+		float SpeedCurrent = 15;
 };

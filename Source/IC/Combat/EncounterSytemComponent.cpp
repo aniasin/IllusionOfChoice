@@ -41,23 +41,21 @@ void UEncounterSytemComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 	// ...
 }
 
+////////////////////////////////////////////
 // Starting point
 void UEncounterSytemComponent::StartEncounter()
 {
 	PlayerControllerRef->SetInputMode(FInputModeGameAndUI().SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock));
 	PlayerControllerRef->bShowMouseCursor = true;
-	
+
 	FViewTargetTransitionParams TransitionParams;
 	PlayerControllerRef->SetViewTarget(EncounterCamera, TransitionParams);
 
 	PlayerRef->bIsInCombat = true;
 
 	// Sort two arrays of actors by speed, one for players team, an another for npcs team
-	TArray<AICCharacter*>PlayerToSort = PlayerRef->PlayerTeam;
-	PlayerTurnOrder = SortPlayersBySpeed(PlayerToSort);
-
-	TArray<ANPC_Character*>NpcToSort = PlayerRef->NpcEncounter;
-	NpcTurnOrder = SortNPCBySpeed(NpcToSort);
+	PlayerTurnOrder = SortPlayersBySpeed(PlayerRef->PlayerTeam);
+	NpcTurnOrder = SortNPCBySpeed(PlayerRef->NpcEncounter);
 
 	UpdateMessageLog("Encounter Start!");
 
@@ -77,38 +75,43 @@ void UEncounterSytemComponent::DecideTurn()
 	// TODO Logic accounting Player has initiative or not
 
 	// While on the same Round, choose the faster
-	if (PlayerTurnOrder[CurrentPlayerTurn]->GetCurrentSpeed() >= NpcTurnOrder[CurrentNpcTurn]->GetCurrentSpeed() && CurrentPlayerRound == CurrentNpcRound)
+	if (CurrentPlayerRound == CurrentNpcRound)
 	{
-		PlayerTurn(PlayerTurnOrder[CurrentPlayerTurn]);
+		if (PlayerTurnOrder[CurrentPlayerTurn]->GetCurrentSpeed() >= NpcTurnOrder[CurrentNpcTurn]->GetCurrentSpeed())
+		{
+			PlayerTurn(PlayerTurnOrder[CurrentPlayerTurn]);
+		}
+		else
+		{
+			NpcTurn(NpcTurnOrder[CurrentNpcTurn]);
+		}
 	}
-	if (NpcTurnOrder[CurrentNpcTurn]->GetCurrentSpeed() >= PlayerTurnOrder[CurrentPlayerTurn]->GetCurrentSpeed() && CurrentNpcRound == CurrentPlayerRound)
+	// Not in the same round
+	else
 	{
-		NpcTurn(NpcTurnOrder[CurrentNpcTurn]);
-	}
-
-	// Every npc have played their turn but players are still a round before
-	if (CurrentNpcRound > 0 && CurrentPlayerRound == CurrentNpcRound - 1)
-	{
-		PlayerTurn(PlayerTurnOrder[CurrentPlayerTurn]);
-	}
-	// Every Player have played their turn but npc are still one round before
-	if (CurrentPlayerRound > 0 && CurrentNpcRound == CurrentPlayerRound - 1)
-	{
-		NpcTurn(NpcTurnOrder[CurrentNpcTurn]);
+		// Every npc have played their turn but players have still left
+		if (CurrentPlayerRound < CurrentNpcRound)
+		{
+			PlayerTurn(PlayerTurnOrder[CurrentPlayerTurn]);
+		}
+		else
+		{
+			NpcTurn(NpcTurnOrder[CurrentNpcTurn]);
+		}
 	}
 }
 
-void UEncounterSytemComponent::PlayerTurn(AICCharacter* Player)
+void UEncounterSytemComponent::PlayerTurn(AICCharacter* PlayerParty)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Player ROUND (%i) TURN (%i): %s"), CurrentPlayerRound, CurrentPlayerTurn, *Player->GetName())
+	UE_LOG(LogTemp, Warning, TEXT("Player ROUND (%i) TURN (%i): %s"), CurrentPlayerRound, CurrentPlayerTurn, *PlayerParty->GetName())
 	
-	if (Player->bIsPlayerControlled)
+	if (PlayerParty->bIsPlayerControlled)
 	{
-		PlayerAction(Player);
+		PlayerAction(PlayerParty);
 	}
 	else
 	{
-		PartyMembersAction(Player);
+		PartyMembersAction(PlayerParty);
 	}	
 }
 
@@ -119,48 +122,21 @@ void UEncounterSytemComponent::NpcTurn(ANPC_Character* Npc)
 	NpcAction(Npc);
 }
 
-void UEncounterSytemComponent::IncrementTurnsAndRounds(bool bIsPlayer)
+void UEncounterSytemComponent::PlayerAction(AICCharacter* PlayerParty)
 {
-	if (bIsPlayer)
-	{
-		// Update Turns and Rounds
-		CurrentPlayerTurn++;
+	APlayerController* PlayerController = Cast<APlayerController>(PlayerParty->GetController());
+	PlayerController->SetViewTarget(PlayerParty);
 
-		// Everyone played their turn Reset turn and inc Round
-		if (CurrentPlayerTurn >= PlayerTurnOrder.Num())
-		{
-			CurrentPlayerTurn = 0;
-			CurrentPlayerRound++;
-		}
-	}
-	else
-	{
-		// Update Turns and Rounds
-		CurrentNpcTurn++;
-
-		// Everyone played their turn Reset turn and inc Round
-		if (CurrentNpcTurn >= NpcTurnOrder.Num())
-		{
-			CurrentNpcTurn = 0;
-			CurrentNpcRound++;
-		}
-	}
-	TimerToNextTurn(TimeBetweenTurns);
+	FString Message = FString::Printf(TEXT("%s's turn! (For now, jut click 'Attack'...)"), *PlayerParty->GetName());
+	UpdateMessageLog(Message);
+	PlayerParty->CreateEncounterPanel();
 }
 
-void UEncounterSytemComponent::PlayerAction(AICCharacter* Player)
+void UEncounterSytemComponent::PartyMembersAction(AICCharacter* PlayerParty)
 {
-	APlayerController* PlayerController = Cast<APlayerController>(Player->GetController());
-	PlayerController->SetViewTarget(Player);
-
-	UpdateMessageLog("Your turn! (For now, jut click 'Attack'...)");
-	Player->CreateEncounterPanel();
-}
-
-void UEncounterSytemComponent::PartyMembersAction(AICCharacter* Player)
-{
-	PositionCamera(Player);
-	UpdateMessageLog("His turn!");
+	PositionCamera(PlayerParty);
+	FString Message = FString::Printf(TEXT("%s's turn!"), *PlayerParty->GetName());
+	UpdateMessageLog(Message);
 
 	// End of turn
 	IncrementTurnsAndRounds(true);
@@ -169,7 +145,9 @@ void UEncounterSytemComponent::PartyMembersAction(AICCharacter* Player)
 void UEncounterSytemComponent::NpcAction(ANPC_Character* Npc)
 {
 	PositionCamera(Npc);
-	UpdateMessageLog("His turn!");
+
+	FString Message = FString::Printf(TEXT("%s's turn!"), *Npc->GetName());
+	UpdateMessageLog(Message);
 
 	// End of turn
 	IncrementTurnsAndRounds(false);
@@ -195,6 +173,7 @@ void UEncounterSytemComponent::PositionCamera(AActor* FocusActor)
 	PlayerControllerRef->SetViewTarget(EncounterCamera);
 }
 
+//////////////////////////////////
 void UEncounterSytemComponent::TimerToNextTurn(float Time)
 {
 	if (!World) { return; }
@@ -207,6 +186,39 @@ void UEncounterSytemComponent::UpdateMessageLog(FString Message)
 {
 	MessageLogText = Message;
 	PlayerRef->MessageLog();
+}
+
+void UEncounterSytemComponent::IncrementTurnsAndRounds(bool bIsPlayerParty)
+{
+	if (bIsPlayerParty)
+	{
+		// Update Turns and Rounds
+		CurrentPlayerTurn++;
+
+		// Everyone played their turn Reset turn and inc Round
+		if (CurrentPlayerTurn >= PlayerTurnOrder.Num())
+		{
+			CurrentPlayerTurn = 0;
+			CurrentPlayerRound++;
+			// Sort player team again, in case CurrentSpeed was modified(Debuff, wound...)
+			PlayerTurnOrder = SortPlayersBySpeed(PlayerRef->PlayerTeam);
+		}
+	}
+	else
+	{
+		// Update Turns and Rounds
+		CurrentNpcTurn++;
+
+		// Everyone played their turn Reset turn and inc Round
+		if (CurrentNpcTurn >= NpcTurnOrder.Num())
+		{
+			CurrentNpcTurn = 0;
+			CurrentNpcRound++;
+			// Sort npc again, in case CurrentSpeed was modified(Debuff, wound...)
+			NpcTurnOrder = SortNPCBySpeed(PlayerRef->NpcEncounter);
+		}
+	}
+	TimerToNextTurn(TimeBetweenTurns);
 }
 
 ///////////////////////////

@@ -31,8 +31,9 @@ public:
 		TArray<AICCharacter*> SortPlayersBySpeed(TArray<AICCharacter*> PlayerToSort);
 	UFUNCTION(BlueprintCallable)
 		TArray<class ANPC_Character*> SortNPCBySpeed(TArray<class ANPC_Character*> NPCToSort);
+
 	UFUNCTION(BlueprintCallable, Category = "Encounter")
-		void IncrementTurnsAndRounds(bool bIsPlayer);
+		void IncrementTurnsAndRounds(bool bIsPlayerParty);
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Camera")
 		class AActor* EncounterCamera;
@@ -67,14 +68,14 @@ private:
 
 	float TimeBetweenTurns = 3.5;
 
-	void PlayerTurn(AICCharacter* Player);
+	void PlayerTurn(AICCharacter* PlayerParty);
 	void NpcTurn(ANPC_Character* Npc);
 
 	void PositionCamera(AActor* FocusActor);
 	void UpdateMessageLog(FString Message);
 
-	void PlayerAction(AICCharacter* Player);
-	void PartyMembersAction(AICCharacter* Player);
+	void PlayerAction(AICCharacter* PlayerParty);
+	void PartyMembersAction(AICCharacter* PlayerParty);
 	void NpcAction(ANPC_Character* Npc);
 	void TimerToNextTurn(float Time);
 };

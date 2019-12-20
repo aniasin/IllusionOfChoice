@@ -52,7 +52,6 @@ void ANPC_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 float ANPC_Character::GetCurrentSpeed()
 {
-	if (!CharacterStatComponent) { return 0.f; }
 	return CharacterStatComponent->SpeedCurrent;
 }
 

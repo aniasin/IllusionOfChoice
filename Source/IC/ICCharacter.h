@@ -82,8 +82,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Status")
 	bool bIsInCombat = false;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category  = "PlayerParty")
-	TArray<class AICCharacter*>PlayerTeam;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "PlayerParty")
+		TArray<class AICCharacter*>PlayerTeam;
 	UPROPERTY()
 		TArray<class ANPC_Character*> NpcEncounter;
 

@@ -86,7 +86,6 @@ void AICCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputC
 
 float AICCharacter::GetCurrentSpeed()
 {
-	if (!CharacterStatComponent) { return 0.f; }
 	return CharacterStatComponent->SpeedCurrent;
 }
 
