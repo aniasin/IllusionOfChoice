@@ -11,6 +11,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "IC/Characters/CharacterStatComponent.h"
 #include "IC/Combat/EncounterSytemComponent.h"
+#include "Camera/CameraActor.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AICCharacter
@@ -83,21 +84,10 @@ void AICCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputC
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AICCharacter::OnResetVR);
 }
 
-
 float AICCharacter::GetCurrentSpeed()
 {
 	if (!CharacterStatComponent) { return 0.f; }
 	return CharacterStatComponent->SpeedCurrent;
-}
-
-void AICCharacter::StartEncounter()
-{
-	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-	PlayerController->SetInputMode(FInputModeGameAndUI().SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock));
-	PlayerController->bShowMouseCursor = true;
-	bIsInCombat = true;
-
-	EncounterComponent->StartEncounter();
 }
 
 void AICCharacter::OnResetVR()

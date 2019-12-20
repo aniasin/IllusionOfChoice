@@ -60,6 +60,8 @@ void ANPC_Character::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor*
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	AICCharacter* Player = Cast<AICCharacter>(OtherActor);
+	UEncounterSytemComponent* EncounterComponent = Player->FindComponentByClass<UEncounterSytemComponent>();
+
 	if (Player)
 		// Player Entered trigger zone
 	{
@@ -86,16 +88,14 @@ void ANPC_Character::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor*
 		if (AIController->bCanSeePlayer)
 		{
 			// If AI can see Player, Player has not the initiative
-			//TODO Set bool in COmbatComponent
+			EncounterComponent->bPlayerHasInitiative = false;
 		}
 		else
 		{
-			// If AI can see Player, Player has the initiative
-			// TODO Set the bool
+			// else, Player has the initiative
+			EncounterComponent->bPlayerHasInitiative = true;
 		}
-
-		// TODO start Encounter in CombatComponent
-		Player->StartEncounter();
+		EncounterComponent->StartEncounter();
 	}
 }
 

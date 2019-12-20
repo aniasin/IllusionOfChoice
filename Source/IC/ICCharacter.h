@@ -34,10 +34,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseLookUpRate;
 
-	void StartEncounter();
-
-	UFUNCTION(BlueprintImplementableEvent, Category = "MessageLog")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Encounter")
 		void MessageLog();
+	UFUNCTION(BlueprintImplementableEvent, Category = "Encounter")
+		void CreateEncounterPanel();
 
 protected:
 
@@ -88,5 +88,8 @@ public:
 		TArray<class ANPC_Character*> NpcEncounter;
 
 	float GetCurrentSpeed();
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "PlayerParty")
+	bool bIsPlayerControlled;
 };
 
