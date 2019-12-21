@@ -37,6 +37,8 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Camera")
 		class ACineCameraActor* EncounterCamera;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Camera")
+		class ACineCameraActor* CloseupCamera;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Encounter")
 		FString MessageLogText;
@@ -66,12 +68,15 @@ private:
 	FTimerDelegate BetweenTurnsTimerDelegate;
 	FTimerHandle BetweenTurnsTimerHandle;
 
+	FTimerDelegate CameraTimerDelegate;
+	FTimerHandle CameraTimerHandle;
+
 	float TimeBetweenTurns = 5.0;
 
 	void PlayerTurn(AICCharacter* PlayerParty);
 	void NpcTurn(ANPC_Character* Npc);
 
-	void PositionCamera(AActor* FocusActor, float Distance, float Height);
+	void PositionCamera(float Angle, AActor* FocusActor, float Distance, float Height);
 	void UpdateMessageLog(FString Message);
 
 	void PlayerAction(AICCharacter* PlayerParty);
@@ -79,9 +84,10 @@ private:
 	void NpcAction(ANPC_Character* Npc);
 	void TimerToNextTurn(float Time);
 
-	void MoveCameraAroundActor();
+	UFUNCTION()
+	void CameraGeneralView();
+
 	AActor* CurrentCameraFocusActor;
 	float CurrentDesiredCameraDistance;
-	float CameraAngleAxis = 0;
-	bool bCameraWantsTick = false;
+
 };

@@ -39,10 +39,6 @@ void UEncounterSytemComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (bCameraWantsTick)
-	{
-		MoveCameraAroundActor();
-	}
 }
 
 ////////////////////////////////////////////
@@ -52,8 +48,7 @@ void UEncounterSytemComponent::StartEncounter()
 	PlayerControllerRef->SetInputMode(FInputModeGameAndUI().SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock));
 	PlayerControllerRef->bShowMouseCursor = true;
 
-	FViewTargetTransitionParams TransitionParams;
-	PlayerControllerRef->SetViewTarget(EncounterCamera, TransitionParams);
+	PlayerControllerRef->SetViewTargetWithBlend(EncounterCamera, 0.8);
 
 	PlayerRef->bIsInCombat = true;
 
@@ -70,7 +65,6 @@ void UEncounterSytemComponent::StartEncounter()
 void UEncounterSytemComponent::DecideTurn()
 {
 	if (!World) { return; }
-	bCameraWantsTick = false;
 
 	World->GetTimerManager().ClearTimer(BetweenTurnsTimerHandle);
 
@@ -130,7 +124,7 @@ void UEncounterSytemComponent::NpcTurn(ANPC_Character* Npc)
 void UEncounterSytemComponent::PlayerAction(AICCharacter* PlayerParty)
 {
 	APlayerController* PlayerController = Cast<APlayerController>(PlayerParty->GetController());
-	PlayerController->SetViewTarget(PlayerParty);
+	PlayerController->SetViewTargetWithBlend(PlayerParty, 0.8);
 
 	FString Message = FString::Printf(TEXT("%s's turn! (For now, jut click 'Attack'...)"), *PlayerParty->GetName());
 	UpdateMessageLog(Message);
@@ -139,7 +133,7 @@ void UEncounterSytemComponent::PlayerAction(AICCharacter* PlayerParty)
 
 void UEncounterSytemComponent::PartyMembersAction(AICCharacter* PlayerParty)
 {
-	PositionCamera(PlayerParty, 900, 25);
+	PositionCamera(45, PlayerParty, 400, 25);
 	FString Message = FString::Printf(TEXT("%s's turn!"), *PlayerParty->GetName());
 	UpdateMessageLog(Message);
 
@@ -149,7 +143,7 @@ void UEncounterSytemComponent::PartyMembersAction(AICCharacter* PlayerParty)
 
 void UEncounterSytemComponent::NpcAction(ANPC_Character* Npc)
 {
-	PositionCamera(Npc, 900, 25);
+	PositionCamera(35, Npc, 400, 25);
 
 	FString Message = FString::Printf(TEXT("%s's turn!"), *Npc->GetName());
 	UpdateMessageLog(Message);
@@ -231,7 +225,7 @@ TArray<ANPC_Character*> UEncounterSytemComponent::SortNPCBySpeed(TArray<ANPC_Cha
 
 //////////////////////////////
 // Camera
-void UEncounterSytemComponent::PositionCamera(AActor* FocusActor, float Distance, float Height)
+void UEncounterSytemComponent::PositionCamera(float Angle, AActor* FocusActor, float Distance, float Height)
 {
 	CurrentCameraFocusActor = FocusActor;
 	CurrentDesiredCameraDistance = Distance;
@@ -240,38 +234,25 @@ void UEncounterSytemComponent::PositionCamera(AActor* FocusActor, float Distance
 	FVector NpcLocation = FocusActor->GetActorLocation();
 	FVector NpcForwardVector = FocusActor->GetActorForwardVector();
 
+	NpcForwardVector = NpcForwardVector.RotateAngleAxis(Angle, FVector(0, 0, 1));
+
 	Newlocation = NpcLocation + NpcForwardVector * Distance;
 	Newlocation = FVector(Newlocation.X, Newlocation.Y, Newlocation.Z + Height);
 
-	EncounterCamera->LookatTrackingSettings.ActorToTrack = FocusActor;
-	EncounterCamera->LookatTrackingSettings.bEnableLookAtTracking = true;
-	EncounterCamera->SetActorLocation(Newlocation);
+	CloseupCamera->LookatTrackingSettings.ActorToTrack = FocusActor;
+	CloseupCamera->LookatTrackingSettings.bEnableLookAtTracking = true;
 
-	PlayerControllerRef->SetViewTarget(EncounterCamera);
+	CloseupCamera->SetActorLocation(Newlocation);
 
-	bCameraWantsTick = true;
-	CameraAngleAxis = 0;
+	PlayerControllerRef->SetViewTargetWithBlend(CloseupCamera, 0.8);
+
+	CameraTimerDelegate.BindUFunction(this, FName("CameraGeneralView"));
+	World->GetTimerManager().SetTimer(CameraTimerHandle, CameraTimerDelegate, 3.0f, false);
+
 }
 
-void UEncounterSytemComponent::MoveCameraAroundActor()
+void UEncounterSytemComponent::CameraGeneralView()
 {
-	FVector NewLocation = CurrentCameraFocusActor->GetActorLocation();
-	CurrentDesiredCameraDistance -= 2.5;
-	CurrentDesiredCameraDistance = FMath::Clamp<float>(CurrentDesiredCameraDistance, 450, 1000);
-
-	FVector Radius = FVector(CurrentDesiredCameraDistance, 0, 0);
-
-	CameraAngleAxis += 0.5;
-
-	CameraAngleAxis = FMath::Clamp<float>(CameraAngleAxis, 1, 180);
-
-
-	FVector RotateValue = Radius.RotateAngleAxis(CameraAngleAxis, FVector(0, 0, 1));
-
-	NewLocation.X += RotateValue.X;
-	NewLocation.Y += RotateValue.Y;
-	NewLocation.Z += RotateValue.Z;
-
-	EncounterCamera->SetActorLocation(NewLocation);
+	World->GetTimerManager().ClearTimer(CameraTimerHandle);
+	PlayerControllerRef->SetViewTargetWithBlend(EncounterCamera, 0.8);
 }
-
