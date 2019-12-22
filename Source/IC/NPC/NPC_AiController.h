@@ -31,12 +31,13 @@ class IC_API ANPC_AiController : public AAIController
 		float HearingRange = 1000.f;
 	UPROPERTY(EditAnywhere, Category = NPC_AI)
 		class UBehaviorTree* BehaviorTree;
-	UBlackboardComponent* BlackboardComponent;
 
 		UFUNCTION()
 		void OnTargetPerceptionUpdate(AActor* Actor, FAIStimulus Stimulus);
 
 public:
+	UPROPERTY()
+		UBlackboardComponent* BlackboardComponent;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = NPC_AI)
 		bool bCanSeeActor = false;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = NPC_AI)

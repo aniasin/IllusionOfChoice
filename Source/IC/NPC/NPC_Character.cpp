@@ -3,6 +3,7 @@
 
 #include "NPC_Character.h"
 #include "IC/NPC/NPC_AiController.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "IC/ICCharacter.h"
 #include "IC/Combat/EncounterSytemComponent.h"
 #include "IC/Characters/CharacterStatComponent.h"
@@ -80,7 +81,7 @@ void ANPC_Character::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor*
 
 		// TODO Surprise attack
 	}
-	// New npc comes across
+	// New npc comes across during combat
 	ANPC_Character* NewComer = Cast<ANPC_Character>(OtherActor);
 	if (NewComer && bIsInCombat && !NewComer->bIsInCombat)
 	{
@@ -113,6 +114,8 @@ void ANPC_Character::GatherNpc(AICCharacter* Player)
 		{
 			// Make an array of npcs who will join
 			CurrentPlayer->NpcEncounter.AddUnique(NpcToAdd);
+			ANPC_AiController* AIController = Cast<ANPC_AiController>(NpcToAdd->GetController());
+			AIController->BlackboardComponent->SetValueAsObject("Player", Player);
 			NpcToAdd->bIsInCombat = true;
 		}
 	}
