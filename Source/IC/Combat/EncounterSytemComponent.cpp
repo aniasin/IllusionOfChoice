@@ -70,10 +70,16 @@ void UEncounterSytemComponent::DecideTurn()
 
 	World->GetTimerManager().ClearTimer(BetweenTurnsTimerHandle);
 
-	if (CurrentNpcRound > 3 || CurrentPlayerRound > 3) { return; } // PlaceHolder to avoid Endless loop
-	// TODO Trigger End Of Combat
+	if (bPlayerHasInitiative)	
+	{ 
+		// if player has initiative, npc have no round 0
+		CurrentNpcRound = 1;
+		bPlayerHasInitiative = false;
+	}
 
-	// TODO Logic accounting Player has initiative or not
+	if (CurrentNpcRound > 3 || CurrentPlayerRound > 3) { return; } // PlaceHolder to avoid Endless loop
+
+	// TODO Trigger End Of Combat
 
 	// While on the same Round, choose the faster
 	if (CurrentPlayerRound == CurrentNpcRound)

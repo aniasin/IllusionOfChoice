@@ -75,10 +75,11 @@ void ANPC_AiController::OnTargetPerceptionUpdate(AActor* Actor, FAIStimulus Stim
 	if (bCanSeeActor && Player)
 	{
 		bCanSeePlayer = true;
+		Player->EncounterComponent->bPlayerHasInitiative = false;
 		BlackboardComponent->SetValueAsObject("Player", Player);
 		UE_LOG(LogTemp, Warning, TEXT("%s : Gain sight with Player"), *AICharacter->GetName())
 
-		if (Player->EncounterComponent->bPlayerHasInitiative)
+		if (Player->EncounterComponent->bPlayerHasInitiative && !Player->bIsInCombat)
 		{
 			AICharacter->GatherNpc(Player);
 			Player->EncounterComponent->StartEncounter();

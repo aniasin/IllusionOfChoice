@@ -25,7 +25,7 @@ ANPC_Character::ANPC_Character(const FObjectInitializer& ObjectInitializer)
 	EncounterTrigger->SetCollisionResponseToAllChannels(ECR_Ignore);
 	EncounterTrigger->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 
-
+	
 	EncounterTrigger->OnComponentBeginOverlap.AddDynamic(this, &ANPC_Character::OnOverlapBegin);
 	EncounterTrigger->OnComponentEndOverlap.AddDynamic(this, &ANPC_Character::OnOverlapEnd);
 }
@@ -78,14 +78,21 @@ void ANPC_Character::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor*
 		// if Player enters encounter zone but is not seen nor already in combat.
 		UEncounterSytemComponent* EncounterComponent = Player->FindComponentByClass<UEncounterSytemComponent>();
 		EncounterComponent->bPlayerHasInitiative = true;
-
-		// TODO Surprise attack
+	}
+	if (Player && Player->bIsInCombat)
+	{
+		// Npc catches player in combat
+		GatherNpc(Player);
+		FString Message = FString::Printf(TEXT("%s has joined the encounter!"), *GetName());
+		Player->EncounterComponent->UpdateMessageLog(Message);
 	}
 	// New npc comes across during combat
 	ANPC_Character* NewComer = Cast<ANPC_Character>(OtherActor);
 	if (NewComer && bIsInCombat && !NewComer->bIsInCombat)
 	{
 		GatherNpc(CurrentPlayer);
+		FString Message = FString::Printf(TEXT("%s has joined the encounter!"), *NewComer->GetName());
+		CurrentPlayer->EncounterComponent->UpdateMessageLog(Message);
 	}
 }
 
@@ -116,6 +123,7 @@ void ANPC_Character::GatherNpc(AICCharacter* Player)
 			CurrentPlayer->NpcEncounter.AddUnique(NpcToAdd);
 			ANPC_AiController* AIController = Cast<ANPC_AiController>(NpcToAdd->GetController());
 			AIController->BlackboardComponent->SetValueAsObject("Player", Player);
+			AIController->BlackboardComponent->SetValueAsObject("Combat", Player);
 			NpcToAdd->bIsInCombat = true;
 		}
 	}

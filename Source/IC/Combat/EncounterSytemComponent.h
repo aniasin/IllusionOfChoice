@@ -44,6 +44,7 @@ public:
 		FString MessageLogText;
 
 	void StartEncounter();
+	void UpdateMessageLog(FString Message);
 
 	UPROPERTY()
 	TArray<class AICCharacter*>PlayerTurnOrder;
@@ -78,7 +79,6 @@ private:
 
 	void CameraCloseupView(float Angle, AActor* FocusActor, float Distance, float Height);
 	void PositionGeneralViewCamera(float Angle, AActor* FocusActor, float Distance, float Height);
-	void UpdateMessageLog(FString Message);
 
 	void PlayerAction(AICCharacter* PlayerParty);
 	void PartyMembersAction(AICCharacter* PlayerParty);
