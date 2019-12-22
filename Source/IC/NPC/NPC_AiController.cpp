@@ -5,6 +5,7 @@
 #include "NPC_Character.h"
 #include "IC/ICCharacter.h"
 #include "IC/Combat/EncounterSytemComponent.h"
+#include "BehaviorTree/BehaviorTree.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISense_Sight.h"
 #include "Perception/AISenseConfig_Sight.h"
@@ -16,7 +17,8 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "NavigationSystem.h"
 
-ANPC_AiController::ANPC_AiController()
+ANPC_AiController::ANPC_AiController(const FObjectInitializer& ObjectInitializer) :
+	Super(ObjectInitializer)
 {
 	// Creating Perception component
 	PerceptionComponent = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("PerceptionComponent"));
@@ -48,6 +50,9 @@ void ANPC_AiController::OnPossess(APawn* InPawn)
 	Super::OnPossess(InPawn);
 
 	AICharacter = Cast<ANPC_Character>(InPawn);
+	if (!BehaviorTree) { return; }
+	RunBehaviorTree(BehaviorTree);
+	BlackboardComponent = GetBlackboardComponent();
 }
 
 void ANPC_AiController::OnTargetPerceptionUpdate(AActor* Actor, FAIStimulus Stimulus)
@@ -70,11 +75,13 @@ void ANPC_AiController::OnTargetPerceptionUpdate(AActor* Actor, FAIStimulus Stim
 	if (bCanSeeActor && Player)
 	{
 		bCanSeePlayer = true;
+		BlackboardComponent->SetValueAsObject("Player", Player);
 		UE_LOG(LogTemp, Warning, TEXT("%s : Gain sight with Player"), *AICharacter->GetName())
 
 		if (Player->EncounterComponent->bPlayerHasInitiative)
 		{
-			AICharacter->GatherNpcAndStartEncounter(Player);
+			AICharacter->GatherNpc(Player);
+			Player->EncounterComponent->StartEncounter();
 		}
 	}
 
@@ -82,6 +89,7 @@ void ANPC_AiController::OnTargetPerceptionUpdate(AActor* Actor, FAIStimulus Stim
 	if (!bCanSeeActor && Player)
 	{
 		bCanSeePlayer = false;
+		BlackboardComponent->SetValueAsObject("Player", NULL);
 		UE_LOG(LogTemp, Warning, TEXT("%s : Loose ight with Player"), *AICharacter->GetName())
 	}
 }

@@ -15,7 +15,7 @@ class IC_API ANPC_AiController : public AAIController
 {
 	GENERATED_BODY()
 
-	ANPC_AiController();
+	ANPC_AiController(const FObjectInitializer& ObjectInitializer);
 
 	class ANPC_Character* AICharacter;
 

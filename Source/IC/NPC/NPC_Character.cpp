@@ -59,48 +59,52 @@ void ANPC_Character::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor*
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	AICCharacter* Player = Cast<AICCharacter>(OtherActor);
-	UEncounterSytemComponent* EncounterComponent = Player->FindComponentByClass<UEncounterSytemComponent>();
 
 	ANPC_AiController* AIController = Cast<ANPC_AiController>(GetController());
 	if (!AIController) { return; }
 
-	if (Player && AIController->bCanSeePlayer)
+	if (Player && AIController->bCanSeePlayer && !Player->bIsInCombat)
 	{
-		// Player Entered trigger zone and AI can see player
-		if (Player->bIsInCombat) { return; }
-
+		// Player Entered trigger zone and AI can see player, player not already in combat
+		UEncounterSytemComponent* EncounterComponent = Player->FindComponentByClass<UEncounterSytemComponent>();
 		EncounterComponent->bPlayerHasInitiative = false;
 	
-		GatherNpcAndStartEncounter(Player);
+		GatherNpc(Player);
+		Player->EncounterComponent->StartEncounter();
 	}
-	if (Player && !AIController->bCanSeePlayer)
+	if (Player && !AIController->bCanSeePlayer && !Player->bIsInCombat)
 	{
 		// if Player enters encounter zone but is not seen nor already in combat.
-		if (Player->bIsInCombat) { return; }
-
+		UEncounterSytemComponent* EncounterComponent = Player->FindComponentByClass<UEncounterSytemComponent>();
 		EncounterComponent->bPlayerHasInitiative = true;
 
 		// TODO Surprise attack
+	}
+	// New npc comes across
+	ANPC_Character* NewComer = Cast<ANPC_Character>(OtherActor);
+	if (NewComer && bIsInCombat && !NewComer->bIsInCombat)
+	{
+		GatherNpc(CurrentPlayer);
 	}
 }
 
 void ANPC_Character::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	AICCharacter* Player = Cast<AICCharacter>(OtherActor);
-	UEncounterSytemComponent* EncounterComponent = Player->FindComponentByClass<UEncounterSytemComponent>();
 	if (Player)
 	{
+		UEncounterSytemComponent* EncounterComponent = Player->FindComponentByClass<UEncounterSytemComponent>();
 		EncounterComponent->bPlayerHasInitiative = false;
 	}
 }
 
-void ANPC_Character::GatherNpcAndStartEncounter(AICCharacter* Player)
+void ANPC_Character::GatherNpc(AICCharacter* Player)
 {
 	// Checking if there are some npc around
 	TArray <AActor*> OverlappingActors;
 	EncounterTrigger->GetOverlappingActors(OverlappingActors);
 
-	AICCharacter* CurrentPlayer = Cast<AICCharacter>(Player);
+	CurrentPlayer = Cast<AICCharacter>(Player);
 
 	for (int32 i = 0; i < OverlappingActors.Num(); i++)
 	{
@@ -108,9 +112,9 @@ void ANPC_Character::GatherNpcAndStartEncounter(AICCharacter* Player)
 		if (NpcToAdd)
 		{
 			// Make an array of npcs who will join
-			CurrentPlayer->NpcEncounter.Add(NpcToAdd);
+			CurrentPlayer->NpcEncounter.AddUnique(NpcToAdd);
+			NpcToAdd->bIsInCombat = true;
 		}
 	}
-	CurrentPlayer->EncounterComponent->StartEncounter();
 }
 
