@@ -24,9 +24,9 @@ class IC_API ANPC_AiController : public AAIController
 	class UAISenseConfig_Hearing* HearingConfig;
 
 	UPROPERTY(EditDefaultsOnly, Category = NPC_AI)
-		float SightRange = 2000.f;
+		float SightRange = 4000.f;
 	UPROPERTY(EditDefaultsOnly, Category = NPC_AI)
-		float LoseSightRange = 2500.f;
+		float LoseSightRange = 4500.f;
 	UPROPERTY(EditDefaultsOnly, Category = NPC_AI)
 		float HearingRange = 1000.f;
 	UPROPERTY(EditAnywhere, Category = NPC_AI)

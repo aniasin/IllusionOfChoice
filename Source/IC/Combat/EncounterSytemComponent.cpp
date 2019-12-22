@@ -70,6 +70,8 @@ void UEncounterSytemComponent::DecideTurn()
 
 	World->GetTimerManager().ClearTimer(BetweenTurnsTimerHandle);
 
+	PlayerRef->NumberOfMove = 0;
+
 	if (bPlayerHasInitiative)	
 	{ 
 		// if player has initiative, npc have no round 0
@@ -106,7 +108,10 @@ void UEncounterSytemComponent::DecideTurn()
 			NpcTurn(NpcTurnOrder[CurrentNpcTurn]);
 		}
 	}
-	PositionGeneralViewCamera(155, PlayerRef, 900, 450);
+	PositionGeneralViewCamera(180, PlayerRef, 900, 450);
+	EncounterCamera->LookatTrackingSettings.ActorToTrack = NpcTurnOrder[CurrentNpcTurn];
+	EncounterCamera->LookatTrackingSettings.bEnableLookAtTracking = true;
+
 }
 
 void UEncounterSytemComponent::PlayerTurn(AICCharacter* PlayerParty)
@@ -135,7 +140,7 @@ void UEncounterSytemComponent::PlayerAction(AICCharacter* PlayerParty)
 	APlayerController* PlayerController = Cast<APlayerController>(PlayerParty->GetController());
 	PlayerController->SetViewTargetWithBlend(PlayerParty, 0.8);
 
-	FString Message = FString::Printf(TEXT("%s's turn! (For now, jut click 'Attack'...)"), *PlayerParty->GetName());
+	FString Message = FString::Printf(TEXT("%s's turn!"), *PlayerParty->GetName());
 	UpdateMessageLog(Message);
 	PlayerParty->CreateEncounterPanel();
 }

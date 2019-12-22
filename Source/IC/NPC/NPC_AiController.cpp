@@ -87,7 +87,7 @@ void ANPC_AiController::OnTargetPerceptionUpdate(AActor* Actor, FAIStimulus Stim
 	}
 
 	// Sight is lost with Player
-	if (!bCanSeeActor && Player)
+	if (!bCanSeeActor && Player && !AICharacter->bIsInCombat)
 	{
 		bCanSeePlayer = false;
 		BlackboardComponent->SetValueAsObject("Player", NULL);

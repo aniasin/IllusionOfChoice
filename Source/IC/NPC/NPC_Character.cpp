@@ -63,6 +63,8 @@ void ANPC_Character::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor*
 
 	ANPC_AiController* AIController = Cast<ANPC_AiController>(GetController());
 	if (!AIController) { return; }
+	
+	if (Player && Player->bIsPartyMember) { return; }
 
 	if (Player && AIController->bCanSeePlayer && !Player->bIsInCombat)
 	{
@@ -79,7 +81,7 @@ void ANPC_Character::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor*
 		UEncounterSytemComponent* EncounterComponent = Player->FindComponentByClass<UEncounterSytemComponent>();
 		EncounterComponent->bPlayerHasInitiative = true;
 	}
-	if (Player && Player->bIsInCombat)
+	if (Player && Player->bIsInCombat && !bIsInCombat)
 	{
 		// Npc catches player in combat
 		GatherNpc(Player);

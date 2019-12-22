@@ -81,6 +81,12 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Status")
 	bool bIsInCombat = false;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Status")
+		bool bWantToMove = false;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Status")
+		bool bCanMove = true;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Status")
+		int32 NumberOfMove;
 
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "PlayerParty")
@@ -90,6 +96,8 @@ public:
 
 	float GetCurrentSpeed();
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "PlayerParty")
+		bool bIsPartyMember;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "PlayerParty")
 	bool bIsPlayerControlled;
 };
