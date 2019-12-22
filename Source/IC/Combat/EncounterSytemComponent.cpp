@@ -48,6 +48,7 @@ void UEncounterSytemComponent::StartEncounter()
 	PlayerControllerRef->SetInputMode(FInputModeGameAndUI().SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock));
 	PlayerControllerRef->bShowMouseCursor = true;
 
+	PositionGeneralViewCamera(155, PlayerRef, 900, 450);
 	PlayerControllerRef->SetViewTargetWithBlend(EncounterCamera, 0.8);
 
 	PlayerRef->bIsInCombat = true;
@@ -61,6 +62,7 @@ void UEncounterSytemComponent::StartEncounter()
 	TimerToNextTurn(TimeBetweenTurns);
 }
 
+////////////////////////////////////////
 // this filter who's turn it is to play
 void UEncounterSytemComponent::DecideTurn()
 {
@@ -98,6 +100,7 @@ void UEncounterSytemComponent::DecideTurn()
 			NpcTurn(NpcTurnOrder[CurrentNpcTurn]);
 		}
 	}
+	PositionGeneralViewCamera(155, PlayerRef, 900, 450);
 }
 
 void UEncounterSytemComponent::PlayerTurn(AICCharacter* PlayerParty)
@@ -133,7 +136,7 @@ void UEncounterSytemComponent::PlayerAction(AICCharacter* PlayerParty)
 
 void UEncounterSytemComponent::PartyMembersAction(AICCharacter* PlayerParty)
 {
-	PositionCamera(45, PlayerParty, 400, 25);
+	CameraCloseupView(45, PlayerParty, 400, 25);
 	FString Message = FString::Printf(TEXT("%s's turn!"), *PlayerParty->GetName());
 	UpdateMessageLog(Message);
 
@@ -143,7 +146,7 @@ void UEncounterSytemComponent::PartyMembersAction(AICCharacter* PlayerParty)
 
 void UEncounterSytemComponent::NpcAction(ANPC_Character* Npc)
 {
-	PositionCamera(35, Npc, 400, 25);
+	CameraCloseupView(35, Npc, 400, 25);
 
 	FString Message = FString::Printf(TEXT("%s's turn!"), *Npc->GetName());
 	UpdateMessageLog(Message);
@@ -225,7 +228,7 @@ TArray<ANPC_Character*> UEncounterSytemComponent::SortNPCBySpeed(TArray<ANPC_Cha
 
 //////////////////////////////
 // Camera
-void UEncounterSytemComponent::PositionCamera(float Angle, AActor* FocusActor, float Distance, float Height)
+void UEncounterSytemComponent::CameraCloseupView(float Angle, AActor* FocusActor, float Distance, float Height)
 {
 	CurrentCameraFocusActor = FocusActor;
 	CurrentDesiredCameraDistance = Distance;
@@ -251,8 +254,30 @@ void UEncounterSytemComponent::PositionCamera(float Angle, AActor* FocusActor, f
 
 }
 
+void UEncounterSytemComponent::PositionGeneralViewCamera(float Angle, AActor* FocusActor, float Distance, float Height)
+{
+	CurrentCameraFocusActor = FocusActor;
+	CurrentDesiredCameraDistance = Distance;
+
+	FVector Newlocation;
+	FVector NpcLocation = FocusActor->GetActorLocation();
+	FVector NpcForwardVector = FocusActor->GetActorForwardVector();
+
+	NpcForwardVector = NpcForwardVector.RotateAngleAxis(Angle, FVector(0, 0, 1));
+
+	Newlocation = NpcLocation + NpcForwardVector * Distance;
+	Newlocation = FVector(Newlocation.X, Newlocation.Y, Newlocation.Z + Height);
+
+	EncounterCamera->LookatTrackingSettings.ActorToTrack = FocusActor;
+	EncounterCamera->LookatTrackingSettings.bEnableLookAtTracking = true;
+
+	EncounterCamera->SetActorLocation(Newlocation);
+}
+
 void UEncounterSytemComponent::CameraGeneralView()
 {
+
+
 	World->GetTimerManager().ClearTimer(CameraTimerHandle);
 	PlayerControllerRef->SetViewTargetWithBlend(EncounterCamera, 0.8);
 }

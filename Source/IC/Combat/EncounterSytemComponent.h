@@ -76,7 +76,8 @@ private:
 	void PlayerTurn(AICCharacter* PlayerParty);
 	void NpcTurn(ANPC_Character* Npc);
 
-	void PositionCamera(float Angle, AActor* FocusActor, float Distance, float Height);
+	void CameraCloseupView(float Angle, AActor* FocusActor, float Distance, float Height);
+	void PositionGeneralViewCamera(float Angle, AActor* FocusActor, float Distance, float Height);
 	void UpdateMessageLog(FString Message);
 
 	void PlayerAction(AICCharacter* PlayerParty);

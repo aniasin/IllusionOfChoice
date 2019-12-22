@@ -4,6 +4,7 @@
 #include "NPC_AiController.h"
 #include "NPC_Character.h"
 #include "IC/ICCharacter.h"
+#include "IC/Combat/EncounterSytemComponent.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISense_Sight.h"
 #include "Perception/AISenseConfig_Sight.h"
@@ -70,6 +71,11 @@ void ANPC_AiController::OnTargetPerceptionUpdate(AActor* Actor, FAIStimulus Stim
 	{
 		bCanSeePlayer = true;
 		UE_LOG(LogTemp, Warning, TEXT("%s : Gain sight with Player"), *AICharacter->GetName())
+
+		if (Player->EncounterComponent->bPlayerHasInitiative)
+		{
+			AICharacter->GatherNpcAndStartEncounter(Player);
+		}
 	}
 
 	// Sight is lost with Player
