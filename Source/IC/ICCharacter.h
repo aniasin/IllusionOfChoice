@@ -25,6 +25,9 @@ public:
 		class UCharacterStatComponent* CharacterStatComponent;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "EncounterComponent")
 		class UEncounterSytemComponent* EncounterComponent;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "EncounterComponent")
+		class UDecalComponent* CursorToWorldComponent;
+
 
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
@@ -38,8 +41,12 @@ public:
 		void MessageLog();
 	UFUNCTION(BlueprintImplementableEvent, Category = "Encounter")
 		void CreateEncounterPanel();
+	UFUNCTION(BlueprintImplementableEvent, Category = "Encounter")
+		void ClearEncounterPanel();
 
 protected:
+	void Click();
+	void StopClick();
 
 	/** Resets HMD orientation in VR. */
 	void OnResetVR();
@@ -73,7 +80,11 @@ protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	// End of APawn interface
 
+	virtual void BeginPlay()override;
+
 public:
+	virtual void Tick(float DeltaTime)override;
+
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
@@ -95,10 +106,16 @@ public:
 		TArray<class ANPC_Character*> NpcEncounter;
 
 	float GetCurrentSpeed();
+	UPROPERTY(BlueprintReadOnly)
+	FVector LocationToMove;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "PlayerParty")
 		bool bIsPartyMember;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "PlayerParty")
 	bool bIsPlayerControlled;
+
+private:
+	void PositionCursorToWorld();
+
 };
 

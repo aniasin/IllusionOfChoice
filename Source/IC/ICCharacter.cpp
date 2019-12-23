@@ -12,6 +12,9 @@
 #include "IC/Characters/CharacterStatComponent.h"
 #include "IC/Combat/EncounterSytemComponent.h"
 #include "Camera/CameraActor.h"
+#include "Components/DecalComponent.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Blueprint/AIBlueprintHelperLibrary.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AICCharacter
@@ -50,6 +53,10 @@ AICCharacter::AICCharacter(const FObjectInitializer& ObjectInitializer)
 
 	CharacterStatComponent = CreateDefaultSubobject<UCharacterStatComponent>(FName("CharacterStatComponent"));
 	EncounterComponent = CreateDefaultSubobject<UEncounterSytemComponent>(FName("EncounterComponent"));
+	CursorToWorldComponent = CreateDefaultSubobject<UDecalComponent>(FName("CursorToWorldComponent"));
+	CursorToWorldComponent->SetupAttachment(RootComponent);
+	CursorToWorldComponent->DecalSize = FVector(16, 32, 32);
+	CursorToWorldComponent->SetVisibility(false);
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
@@ -64,6 +71,8 @@ void AICCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputC
 	check(PlayerInputComponent);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+	PlayerInputComponent->BindAction("Click", IE_Pressed, this, &AICCharacter::Click);
+	PlayerInputComponent->BindAction("Click", IE_Released, this, &AICCharacter::StopClick);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AICCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AICCharacter::MoveRight);
@@ -84,9 +93,50 @@ void AICCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputC
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AICCharacter::OnResetVR);
 }
 
+void AICCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// Initialize PlayerTeam array with player...
+	PlayerTeam.AddUnique(this);
+	// ...and variables
+	bWantToMove = false;
+	bCanMove = true;
+}
+
+void AICCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	PositionCursorToWorld();
+}
+
 float AICCharacter::GetCurrentSpeed()
 {
 	return CharacterStatComponent->SpeedCurrent;
+}
+
+void AICCharacter::Click()
+{
+	if (bWantToMove && bCanMove && NumberOfMove <= 2)
+	{
+		APlayerController* PlayerController = Cast<APlayerController>(GetController());
+		UAIBlueprintHelperLibrary::SimpleMoveToLocation(PlayerController, LocationToMove);
+
+		bWantToMove = false;
+		CursorToWorldComponent->ToggleVisibility(false);
+		NumberOfMove++;
+		if (NumberOfMove >= 2)
+		{
+			EncounterComponent->IncrementTurnsAndRounds(true);
+			ClearEncounterPanel();
+		}
+	}
+}
+
+void AICCharacter::StopClick()
+{
+
 }
 
 void AICCharacter::OnResetVR()
@@ -142,5 +192,27 @@ void AICCharacter::MoveRight(float Value)
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 		// add movement in that direction
 		AddMovementInput(Direction, Value);
+	}
+}
+
+void AICCharacter::PositionCursorToWorld()
+{
+	if (bWantToMove && bCanMove && NumberOfMove <= 2)
+	{
+		FVector PlayerLocation = GetActorLocation();
+		APlayerController* PlayerController = Cast<APlayerController>(GetController());
+		FHitResult HitResult;
+
+		PlayerController->GetHitResultUnderCursor(ECC_Visibility, true, HitResult);
+		FVector Location = HitResult.Location;
+		FVector Normal = HitResult.ImpactNormal;
+
+		if (FVector::Distance(PlayerLocation, Location) <= CharacterStatComponent->SpeedCurrent * 20)
+		{
+			LocationToMove = Location;
+			FRotator Rotation = UKismetMathLibrary::MakeRotationFromAxes(Normal, FVector(0,0,0), FVector(0,0,0));
+			CursorToWorldComponent->SetWorldLocationAndRotation(Location, Rotation);
+		}
+		
 	}
 }
