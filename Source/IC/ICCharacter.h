@@ -18,6 +18,7 @@ class AICCharacter : public ACharacter
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
+
 public:
 	AICCharacter(const FObjectInitializer& ObjectInitializer);
 
@@ -25,9 +26,10 @@ public:
 		class UCharacterStatComponent* CharacterStatComponent;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "EncounterComponent")
 		class UEncounterSytemComponent* EncounterComponent;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "InventoryComponent")
+		class UInventoryComponent* InventoryComponent;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "EncounterComponent")
 		class UDecalComponent* CursorToWorldComponent;
-
 
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
@@ -47,9 +49,6 @@ public:
 protected:
 	void Click();
 	void StopClick();
-
-	/** Resets HMD orientation in VR. */
-	void OnResetVR();
 
 	/** Called for forwards/backward input */
 	void MoveForward(float Value);
@@ -75,7 +74,6 @@ protected:
 	/** Handler for when a touch input stops. */
 	void TouchStopped(ETouchIndex::Type FingerIndex, FVector Location);
 
-protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	// End of APawn interface
@@ -106,6 +104,9 @@ public:
 		TArray<class ANPC_Character*> NpcEncounter;
 
 	float GetCurrentSpeed();
+	float GetCurrentHealth();
+	float CurrentDistanceToQuerier;
+
 	UPROPERTY(BlueprintReadOnly)
 	FVector LocationToMove;
 
@@ -118,4 +119,3 @@ private:
 	void PositionCursorToWorld();
 
 };
-

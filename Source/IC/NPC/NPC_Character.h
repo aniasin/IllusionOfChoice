@@ -35,7 +35,12 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "InventoryComponent")
+		class UInventoryComponent* InventoryComponent;
+
 	float GetCurrentSpeed();
+	float GetCurrentHealth();
+	float CurrentDistanceToQuerier;
 
 	UFUNCTION()
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, 

@@ -50,9 +50,11 @@ void ANPC_AiController::OnPossess(APawn* InPawn)
 	Super::OnPossess(InPawn);
 
 	AICharacter = Cast<ANPC_Character>(InPawn);
-	if (!BehaviorTree) { return; }
-	RunBehaviorTree(BehaviorTree);
-	BlackboardComponent = GetBlackboardComponent();
+	if (AICharacter && BehaviorTree)
+	{
+		RunBehaviorTree(BehaviorTree);
+		BlackboardComponent = GetBlackboardComponent();
+	}
 }
 
 void ANPC_AiController::OnTargetPerceptionUpdate(AActor* Actor, FAIStimulus Stimulus)

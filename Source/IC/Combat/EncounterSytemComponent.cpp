@@ -2,15 +2,19 @@
 
 
 #include "EncounterSytemComponent.h"
+#include "IC/Characters/CharacterStatComponent.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
 #include "CinematicCamera/Public/CineCameraActor.h"
 #include "Containers/Array.h"
 #include "IC/ICCharacter.h"
+#include "IC/NPC/NPC_AiController.h"
 #include "GameFramework/PlayerController.h"
 #include "IC/NPC/NPC_Character.h"
 #include "Blueprint/UserWidget.h"
 #include "IC/UI/LogMessageWidget.h"
+#include "IC/Combat/InventoryComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 // Sets default values for this component's properties
 UEncounterSytemComponent::UEncounterSytemComponent()
@@ -18,10 +22,7 @@ UEncounterSytemComponent::UEncounterSytemComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
 }
-
 
 // Called when the game starts
 void UEncounterSytemComponent::BeginPlay()
@@ -55,7 +56,7 @@ void UEncounterSytemComponent::StartEncounter()
 
 	// Sort two arrays of actors by speed, one for players team, an another for npcs team
 	PlayerTurnOrder = SortPlayersBySpeed(PlayerRef->PlayerTeam);
-	NpcTurnOrder = SortNPCBySpeed(PlayerRef->NpcEncounter);
+	NpcTurnOrder = SortNpcBySpeed(PlayerRef->NpcEncounter);
 
 	UpdateMessageLog("Encounter Start!");
 
@@ -67,7 +68,6 @@ void UEncounterSytemComponent::StartEncounter()
 void UEncounterSytemComponent::DecideTurn()
 {
 	if (!World) { return; }
-
 	World->GetTimerManager().ClearTimer(BetweenTurnsTimerHandle);
 
 	PlayerRef->NumberOfMove = 0;
@@ -79,8 +79,7 @@ void UEncounterSytemComponent::DecideTurn()
 		bPlayerHasInitiative = false;
 	}
 
-	if (CurrentNpcRound > 3 || CurrentPlayerRound > 3) { return; } // PlaceHolder to avoid Endless loop
-
+	if (CurrentNpcRound > 3 || CurrentPlayerRound > 3) { return; } // PlaceHolder to avoid Endless Encounter has there is no end Encounter yet
 	// TODO Trigger End Of Combat
 
 	// While on the same Round, choose the faster
@@ -98,7 +97,7 @@ void UEncounterSytemComponent::DecideTurn()
 	// Not in the same round
 	else
 	{
-		// Every npc have played their turn but players have still left
+		// Every npc have played their turn but players have still some left
 		if (CurrentPlayerRound < CurrentNpcRound)
 		{
 			PlayerTurn(PlayerTurnOrder[CurrentPlayerTurn]);
@@ -148,6 +147,8 @@ void UEncounterSytemComponent::PlayerAction(AICCharacter* PlayerParty)
 void UEncounterSytemComponent::PartyMembersAction(AICCharacter* PlayerParty)
 {
 	CameraCloseupView(45, PlayerParty, 400, 25);
+	AIDecision(PlayerParty, true);
+
 	FString Message = FString::Printf(TEXT("%s's turn!"), *PlayerParty->GetName());
 	UpdateMessageLog(Message);
 
@@ -158,6 +159,7 @@ void UEncounterSytemComponent::PartyMembersAction(AICCharacter* PlayerParty)
 void UEncounterSytemComponent::NpcAction(ANPC_Character* Npc)
 {
 	CameraCloseupView(35, Npc, 400, 25);
+	AIDecision(Npc, false);
 
 	FString Message = FString::Printf(TEXT("%s's turn!"), *Npc->GetName());
 	UpdateMessageLog(Message);
@@ -208,13 +210,161 @@ void UEncounterSytemComponent::IncrementTurnsAndRounds(bool bIsPlayerParty)
 			CurrentNpcTurn = 0;
 			CurrentNpcRound++;
 			// Sort npc again, in case CurrentSpeed was modified(Debuff, wound...)
-			NpcTurnOrder = SortNPCBySpeed(PlayerRef->NpcEncounter);
+			NpcTurnOrder = SortNpcBySpeed(PlayerRef->NpcEncounter);
 		}
 	}
 	TimerToNextTurn(TimeBetweenTurns);
 }
+///////////////////////////
+// AI
+void UEncounterSytemComponent::AIDecision(AActor* AIActor, bool bIsPartyMember)
+{
+	// TODO Simplify all doubles due to npc or Party members actors
+	AActor* CurrentTarget = NULL;
+	if (bIsPartyMember)
+	{
+		CurrentTarget = AIChooseWeakestReachableTarget(AIActor, true);
+		if (CurrentTarget != NULL)
+		{
+			AICCharacter* Npc = Cast<AICCharacter>(AIActor);
+			AAIController* AIController = Cast<AAIController>(Npc->GetController());
+			AIController->MoveToActor(CurrentTarget, 50);
+		}
+		else
+			// No weak Target reachable, choose the nearest foe
+		{
+			AICCharacter* Npc = Cast<AICCharacter>(AIActor);
+			AAIController* AIController = Cast<AAIController>(Npc->GetController());
+			CurrentTarget = FindClosestFoe(Npc, true);
+			UE_LOG(LogTemp, Warning, TEXT("%s PURSUING %s"), *AIActor->GetName(), *CurrentTarget->GetName())
+				FVector LocationToMove;
+			LocationToMove = CurrentTarget->GetActorLocation() - Npc->GetActorLocation();
+			LocationToMove.Normalize();
+			float Distance = Npc->GetCurrentSpeed() * 40;
+			LocationToMove = LocationToMove * Distance + Npc->GetActorLocation();
+			AIController->MoveToLocation(LocationToMove);
+		}
+	}
+	else
+	{
+		CurrentTarget = AIChooseWeakestReachableTarget(AIActor, false);
+		if (CurrentTarget != NULL)
+		{
+			ANPC_Character* Npc = Cast<ANPC_Character>(AIActor);
+			AAIController* AIController = Cast<AAIController>(Npc->GetController());
+			AIController->MoveToActor(CurrentTarget, 50);
+		}
+		else
+		// No weak Target reachable, choose the nearest foe
+		{
+			ANPC_Character* Npc = Cast<ANPC_Character>(AIActor);
+			AAIController* AIController = Cast<AAIController>(Npc->GetController());
+			CurrentTarget = FindClosestFoe(Npc, false);
+			UE_LOG(LogTemp, Warning, TEXT("%s PURSUING %s"), *AIActor->GetName(), *CurrentTarget->GetName())
+			FVector LocationToMove;
+			LocationToMove = CurrentTarget->GetActorLocation() - Npc->GetActorLocation();
+			LocationToMove.Normalize();
+			float Distance = Npc->GetCurrentSpeed() * 40;
+			LocationToMove = LocationToMove * Distance + Npc->GetActorLocation();
+			AIController->MoveToLocation(LocationToMove);
+		}
+	}
+}
+
+AActor* UEncounterSytemComponent::AIChooseWeakestReachableTarget(AActor* Instigator, bool bIsPartyMember)
+{
+	AActor* CurrentTarget = NULL;
+	if (bIsPartyMember)
+	{
+		TArray<ANPC_Character*>NpcSorted;
+		AICCharacter* PlayerParty = Cast<AICCharacter>(Instigator);
+		NpcSorted = SortNpcByHealth(NpcTurnOrder);
+		for (int32 i = 0 ; i < NpcSorted.Num() ; i++)
+		{
+			float Distance = FVector::Distance(NpcSorted[i]->GetActorLocation(), Instigator->GetActorLocation());
+			// Choose the weaker reachable foe
+			if (Distance <= PlayerParty->GetCurrentSpeed() * 40)
+			{
+				CurrentTarget = NpcSorted[i];
+				break;
+			}
+		}
+	}
+	else
+	{
+		TArray<AICCharacter*>PlayersSorted;
+		ANPC_Character* Npc = Cast<ANPC_Character>(Instigator);
+
+		PlayersSorted = SortPlayersByHealth(PlayerTurnOrder);
+		for (int32 i = 0; i < PlayersSorted.Num(); i++)
+		{
+			float Distance = FVector::Distance(PlayersSorted[i]->GetActorLocation(), Instigator->GetActorLocation());
+			// Choose the weaker reachable foe
+			if (Distance <= Npc->GetCurrentSpeed() * 40)
+			{
+				CurrentTarget = PlayersSorted[i];
+				break;
+			}
+		}
+	}
+	return CurrentTarget;
+}
+
+AActor* UEncounterSytemComponent::FindClosestFoe(AActor* Instigator, bool bIsPartyMember)
+{
+	AActor* CurrentTarget = NULL;
+	if (bIsPartyMember)
+	{
+		AICCharacter* PlayerParty = Cast<AICCharacter>(Instigator);
+		TArray<ANPC_Character*>NpcToSort = PlayerRef->NpcEncounter;
+		for (int32 i = 0; i < NpcToSort.Num(); i++)
+		{
+			float Distance = FVector::Distance(NpcToSort[i]->GetActorLocation(), Instigator->GetActorLocation());
+			NpcToSort[i]->CurrentDistanceToQuerier = Distance;
+		}
+		TArray<ANPC_Character*>NearNpc = SortNpcByDistance(NpcToSort);
+		CurrentTarget = NearNpc[0];
+	}
+	else
+	{
+		ANPC_Character* Npc = Cast<ANPC_Character>(Instigator);
+		TArray<AICCharacter*>PlayerToSort = PlayerRef->PlayerTeam;
+		for (int32 i = 0; i < PlayerToSort.Num(); i++)
+		{
+			AICCharacter* Player = Cast<AICCharacter>(PlayerToSort[i]);
+			float Distance = FVector::Distance(Player->GetActorLocation(), Instigator->GetActorLocation());
+			Player->CurrentDistanceToQuerier = Distance;
+		}
+		TArray<AICCharacter*>NearPlayer = SortPlayersByDistance(PlayerToSort);
+		CurrentTarget = NearPlayer[0];
+	}
+	return CurrentTarget;
+}
 
 ///////////////////////////
+// tools
+TArray<AICCharacter*> UEncounterSytemComponent::SortPlayersByDistance(TArray<AICCharacter*> PlayerToSort)
+{
+	auto SortPred = [](AICCharacter& A, AICCharacter& B)->bool
+	{
+		return(A.CurrentDistanceToQuerier) <= (B.CurrentDistanceToQuerier);
+	};
+	PlayerToSort.Sort(SortPred);
+
+	return PlayerToSort;
+}
+
+TArray<ANPC_Character*> UEncounterSytemComponent::SortNpcByDistance(TArray<ANPC_Character*> NpcToSort)
+{
+	auto SortPred = [](ANPC_Character& A, ANPC_Character& B)->bool
+	{
+		return(A.CurrentDistanceToQuerier) <= (B.CurrentDistanceToQuerier);
+	};
+	NpcToSort.Sort(SortPred);
+
+	return NpcToSort;
+}
+
 TArray<AICCharacter*> UEncounterSytemComponent::SortPlayersBySpeed(TArray<AICCharacter*> PlayerToSort)
 {
 	auto SortPred = [](AICCharacter& A, AICCharacter& B)->bool
@@ -226,7 +376,7 @@ TArray<AICCharacter*> UEncounterSytemComponent::SortPlayersBySpeed(TArray<AICCha
 	return PlayerToSort;
 }
 
-TArray<ANPC_Character*> UEncounterSytemComponent::SortNPCBySpeed(TArray<ANPC_Character*> NPCToSort)
+TArray<ANPC_Character*> UEncounterSytemComponent::SortNpcBySpeed(TArray<ANPC_Character*> NPCToSort)
 {
 	auto SortPred = [](ANPC_Character& A, ANPC_Character& B)->bool
 	{
@@ -237,6 +387,27 @@ TArray<ANPC_Character*> UEncounterSytemComponent::SortNPCBySpeed(TArray<ANPC_Cha
 	return NPCToSort;
 }
 
+TArray<AICCharacter*> UEncounterSytemComponent::SortPlayersByHealth(TArray<AICCharacter*> PlayerToSort)
+{
+	auto SortPred = [](AICCharacter& A, AICCharacter& B)->bool
+	{
+		return(A.GetCurrentHealth()) <= (B.GetCurrentHealth());
+	};
+	PlayerToSort.Sort(SortPred);
+
+	return PlayerToSort;
+}
+
+TArray<ANPC_Character*> UEncounterSytemComponent::SortNpcByHealth(TArray<ANPC_Character*> NPCToSort)
+{
+	auto SortPred = [](ANPC_Character& A, ANPC_Character& B)->bool
+	{
+		return(A.GetCurrentHealth()) <= (B.GetCurrentHealth());
+	};
+	NPCToSort.Sort(SortPred);
+
+	return NPCToSort;
+}
 //////////////////////////////
 // Camera
 void UEncounterSytemComponent::CameraCloseupView(float Angle, AActor* FocusActor, float Distance, float Height)

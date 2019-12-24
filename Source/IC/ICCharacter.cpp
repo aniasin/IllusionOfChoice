@@ -11,6 +11,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "IC/Characters/CharacterStatComponent.h"
 #include "IC/Combat/EncounterSytemComponent.h"
+#include "IC/Combat/InventoryComponent.h"
 #include "Camera/CameraActor.h"
 #include "Components/DecalComponent.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -53,6 +54,8 @@ AICCharacter::AICCharacter(const FObjectInitializer& ObjectInitializer)
 
 	CharacterStatComponent = CreateDefaultSubobject<UCharacterStatComponent>(FName("CharacterStatComponent"));
 	EncounterComponent = CreateDefaultSubobject<UEncounterSytemComponent>(FName("EncounterComponent"));
+	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(FName("InventoryComponent"));
+
 	CursorToWorldComponent = CreateDefaultSubobject<UDecalComponent>(FName("CursorToWorldComponent"));
 	CursorToWorldComponent->SetupAttachment(RootComponent);
 	CursorToWorldComponent->DecalSize = FVector(16, 32, 32);
@@ -88,9 +91,6 @@ void AICCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputC
 	// handle touch devices
 	PlayerInputComponent->BindTouch(IE_Pressed, this, &AICCharacter::TouchStarted);
 	PlayerInputComponent->BindTouch(IE_Released, this, &AICCharacter::TouchStopped);
-
-	// VR headset functionality
-	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AICCharacter::OnResetVR);
 }
 
 void AICCharacter::BeginPlay()
@@ -111,10 +111,8 @@ void AICCharacter::Tick(float DeltaTime)
 	PositionCursorToWorld();
 }
 
-float AICCharacter::GetCurrentSpeed()
-{
-	return CharacterStatComponent->SpeedCurrent;
-}
+float AICCharacter::GetCurrentSpeed() {	return CharacterStatComponent->SpeedCurrent; }
+float AICCharacter::GetCurrentHealth() { return CharacterStatComponent->HealthCurrent; }
 
 void AICCharacter::Click()
 {
@@ -126,7 +124,7 @@ void AICCharacter::Click()
 		bWantToMove = false;
 		CursorToWorldComponent->ToggleVisibility(false);
 		NumberOfMove++;
-		if (NumberOfMove >= 2)
+		if (NumberOfMove >= 1)
 		{
 			EncounterComponent->IncrementTurnsAndRounds(true);
 			ClearEncounterPanel();
@@ -137,11 +135,6 @@ void AICCharacter::Click()
 void AICCharacter::StopClick()
 {
 
-}
-
-void AICCharacter::OnResetVR()
-{
-	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
 }
 
 void AICCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
@@ -207,7 +200,7 @@ void AICCharacter::PositionCursorToWorld()
 		FVector Location = HitResult.Location;
 		FVector Normal = HitResult.ImpactNormal;
 
-		if (FVector::Distance(PlayerLocation, Location) <= CharacterStatComponent->SpeedCurrent * 20)
+		if (FVector::Distance(PlayerLocation, Location) <= CharacterStatComponent->SpeedCurrent * 40)
 		{
 			LocationToMove = Location;
 			FRotator Rotation = UKismetMathLibrary::MakeRotationFromAxes(Normal, FVector(0,0,0), FVector(0,0,0));

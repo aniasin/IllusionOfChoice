@@ -30,7 +30,15 @@ public:
 	UFUNCTION(BlueprintCallable)
 		TArray<AICCharacter*> SortPlayersBySpeed(TArray<AICCharacter*> PlayerToSort);
 	UFUNCTION(BlueprintCallable)
-		TArray<class ANPC_Character*> SortNPCBySpeed(TArray<class ANPC_Character*> NPCToSort);
+		TArray<class ANPC_Character*> SortNpcBySpeed(TArray<class ANPC_Character*> NPCToSort);
+	UFUNCTION(BlueprintCallable)
+		TArray<AICCharacter*> SortPlayersByHealth(TArray<AICCharacter*> PlayerToSort);
+	UFUNCTION(BlueprintCallable)
+	TArray<ANPC_Character*> SortNpcByHealth(TArray<ANPC_Character*> NpcToSort);
+	UFUNCTION(BlueprintCallable)
+		TArray<AICCharacter*> SortPlayersByDistance(TArray<AICCharacter*> PlayerToSort);
+	UFUNCTION(BlueprintCallable)
+		TArray<ANPC_Character*> SortNpcByDistance(TArray<ANPC_Character*> NpcToSort);
 
 	UFUNCTION(BlueprintCallable, Category = "Encounter")
 		void IncrementTurnsAndRounds(bool bIsPlayerParty);
@@ -64,7 +72,12 @@ private:
 	UFUNCTION()
 		void DecideTurn();
 
-	// Timer
+	// AI
+	void AIDecision(AActor* AIActor, bool bIsPartyMember);
+	AActor* AIChooseWeakestReachableTarget(AActor* Intigator, bool bIsPartyMember);
+	AActor* FindClosestFoe(AActor* Instigator, bool bIsPartyMember);
+
+	// Timers
 	class UWorld* World;
 	FTimerDelegate BetweenTurnsTimerDelegate;
 	FTimerHandle BetweenTurnsTimerHandle;
@@ -90,5 +103,4 @@ private:
 
 	AActor* CurrentCameraFocusActor;
 	float CurrentDesiredCameraDistance;
-
 };

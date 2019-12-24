@@ -8,6 +8,7 @@
 #include "IC/Combat/EncounterSytemComponent.h"
 #include "IC/Characters/CharacterStatComponent.h"
 #include "Components/SphereComponent.h"
+#include "IC/Combat/InventoryComponent.h"
 
 // Sets default values
 ANPC_Character::ANPC_Character(const FObjectInitializer& ObjectInitializer)
@@ -25,6 +26,7 @@ ANPC_Character::ANPC_Character(const FObjectInitializer& ObjectInitializer)
 	EncounterTrigger->SetCollisionResponseToAllChannels(ECR_Ignore);
 	EncounterTrigger->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 
+	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(FName("InventoryComponent"));
 	
 	EncounterTrigger->OnComponentBeginOverlap.AddDynamic(this, &ANPC_Character::OnOverlapBegin);
 	EncounterTrigger->OnComponentEndOverlap.AddDynamic(this, &ANPC_Character::OnOverlapEnd);
@@ -56,6 +58,11 @@ float ANPC_Character::GetCurrentSpeed()
 	return CharacterStatComponent->SpeedCurrent;
 }
 
+float ANPC_Character::GetCurrentHealth()
+{
+	return CharacterStatComponent->HealthCurrent;
+}
+
 void ANPC_Character::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, 
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
@@ -80,6 +87,7 @@ void ANPC_Character::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor*
 		// if Player enters encounter zone but is not seen nor already in combat.
 		UEncounterSytemComponent* EncounterComponent = Player->FindComponentByClass<UEncounterSytemComponent>();
 		EncounterComponent->bPlayerHasInitiative = true;
+		// TODO Possibility to Initiate Surprise attack
 	}
 	if (Player && Player->bIsInCombat && !bIsInCombat)
 	{
@@ -105,6 +113,7 @@ void ANPC_Character::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* O
 	{
 		UEncounterSytemComponent* EncounterComponent = Player->FindComponentByClass<UEncounterSytemComponent>();
 		EncounterComponent->bPlayerHasInitiative = false;
+		// TODO Retreating logic
 	}
 }
 
@@ -124,10 +133,10 @@ void ANPC_Character::GatherNpc(AICCharacter* Player)
 			// Make an array of npcs who will join
 			CurrentPlayer->NpcEncounter.AddUnique(NpcToAdd);
 			ANPC_AiController* AIController = Cast<ANPC_AiController>(NpcToAdd->GetController());
+			// Updating blackboard to stop behavior tree logic
 			AIController->BlackboardComponent->SetValueAsObject("Player", Player);
 			AIController->BlackboardComponent->SetValueAsObject("Combat", Player);
 			NpcToAdd->bIsInCombat = true;
 		}
 	}
 }
-
