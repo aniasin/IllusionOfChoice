@@ -41,10 +41,8 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Encounter")
 		void MessageLog();
-	UFUNCTION(BlueprintImplementableEvent, Category = "Encounter")
-		void CreateEncounterPanel();
-	UFUNCTION(BlueprintImplementableEvent, Category = "Encounter")
-		void ClearEncounterPanel();
+	UFUNCTION(BlueprintCallable, Category = "Encounter")
+	void CreateEncounterPanel();
 
 protected:
 	void Click();

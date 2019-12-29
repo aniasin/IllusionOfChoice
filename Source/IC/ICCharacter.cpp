@@ -1,6 +1,7 @@
 // Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
 #include "ICCharacter.h"
+#include "IC/ICGameInstance.h"
 #include "GameFramework/PlayerController.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
@@ -127,7 +128,6 @@ void AICCharacter::Click()
 		if (NumberOfMove >= 1)
 		{
 			EncounterComponent->IncrementTurnsAndRounds(true);
-			ClearEncounterPanel();
 		}
 	}
 }
@@ -208,4 +208,11 @@ void AICCharacter::PositionCursorToWorld()
 		}
 		
 	}
+}
+
+void AICCharacter::CreateEncounterPanel()
+{
+	UICGameInstance* GameInstance = Cast<UICGameInstance>(GetGameInstance());
+	if (!GameInstance) { return; }
+	GameInstance->LoadEncounterPanel(this);
 }

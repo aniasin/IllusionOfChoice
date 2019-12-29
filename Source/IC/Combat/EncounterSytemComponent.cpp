@@ -60,7 +60,7 @@ void UEncounterSytemComponent::StartEncounter()
 
 	UpdateMessageLog("Encounter Start!");
 
-	TimerToNextTurn(TimeBetweenTurns);
+	TimerToNextTurn(TimeBetweenTurns); // Timer before calling DecideTurn v
 }
 
 ////////////////////////////////////////
