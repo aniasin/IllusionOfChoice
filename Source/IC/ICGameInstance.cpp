@@ -48,14 +48,16 @@ void UICGameInstance::LoadGameMenu()
 	GameMenu->SetMenuInterface(this);
 }
 
-void UICGameInstance::LoadEncounterPanel(AICCharacter* Player)
+UEncounterPanel* UICGameInstance::LoadEncounterPanel(AICCharacter* Player)
 {
 	// Create and show Panel
-	if (!EncounterPanelWidget) { return; }
+	if (!EncounterPanelWidget) { return 0; }
 	EncounterPanel = CreateWidget<UEncounterPanel>(this, EncounterPanelWidget);
 	EncounterPanel->SetUp();
 	EncounterPanel->SetMenuInterface(this);
 	EncounterPanel->PlayerRef = Player;
+
+	return EncounterPanel;
 }
 
 void UICGameInstance::SaveGame()

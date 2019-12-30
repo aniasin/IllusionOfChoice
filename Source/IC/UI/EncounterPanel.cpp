@@ -47,9 +47,16 @@ void UEncounterPanel::Panel_Tactic()
 
 void UEncounterPanel::Panel_Move()
 {
-	PlayerRef->bWantToMove = true;
-	PlayerRef->CursorToWorldComponent->SetVisibility(true);
-	TearDown();
+	if (!PlayerRef->bWantToMove)
+	{
+		PlayerRef->bWantToMove = true;
+		PlayerRef->CursorToWorldComponent->ToggleVisibility(true);
+	}
+	else
+	{
+		PlayerRef->bWantToMove = false;
+		PlayerRef->CursorToWorldComponent->ToggleVisibility(false);
+	}
 }
 
 void UEncounterPanel::Panel_Action()
@@ -74,7 +81,7 @@ void UEncounterPanel::Panel_Action01()
 
 void UEncounterPanel::Panel_Action02()
 {
-
+	Panel_Move();
 }
 
 void UEncounterPanel::Panel_Action03()
@@ -90,5 +97,10 @@ void UEncounterPanel::Panel_Talk()
 void UEncounterPanel::Panel_EndTurn()
 {
 	PlayerRef->EncounterComponent->IncrementTurnsAndRounds(true);
-	TearDown();
+	TearDown(false);
+}
+
+void UEncounterPanel::ClosePanel()
+{
+	TearDown(false);
 }

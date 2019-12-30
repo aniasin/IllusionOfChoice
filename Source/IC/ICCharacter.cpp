@@ -2,6 +2,7 @@
 
 #include "ICCharacter.h"
 #include "IC/ICGameInstance.h"
+#include "IC/UI/EncounterPanel.h"
 #include "GameFramework/PlayerController.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
@@ -123,6 +124,7 @@ void AICCharacter::Click()
 		UAIBlueprintHelperLibrary::SimpleMoveToLocation(PlayerController, LocationToMove);
 
 		bWantToMove = false;
+		EncounterPanel->ClosePanel();
 		CursorToWorldComponent->ToggleVisibility(false);
 		NumberOfMove++;
 		if (NumberOfMove >= 1)
@@ -212,7 +214,19 @@ void AICCharacter::PositionCursorToWorld()
 
 void AICCharacter::CreateEncounterPanel()
 {
+	ToggleCameraBoom(true);
 	UICGameInstance* GameInstance = Cast<UICGameInstance>(GetGameInstance());
 	if (!GameInstance) { return; }
-	GameInstance->LoadEncounterPanel(this);
+	EncounterPanel = GameInstance->LoadEncounterPanel(this);
 }
+
+void AICCharacter::ToggleCameraBoom(bool bEncounter)
+{
+	float Length;
+	FVector Location;
+	bEncounter ? Length = 600 : Length = 300;
+	bEncounter ? Location = FVector(0, 0, 70) : Location = FVector(0, 0, 0);
+	CameraBoom->TargetArmLength = Length;
+	CameraBoom->SetRelativeLocation(Location);
+}
+

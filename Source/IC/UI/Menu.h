@@ -21,6 +21,6 @@ protected:
 public:
 	void SetMenuInterface(IMenuInterface* MenuInterfaceToSet);
 	void SetUp();
-	void TearDown();
+	void TearDown(bool bToggleInputMode);
 };
 	

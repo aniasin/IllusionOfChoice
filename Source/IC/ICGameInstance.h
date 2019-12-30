@@ -25,7 +25,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "MenuSystem")
 		void LoadGameMenu();
 	UFUNCTION(BlueprintCallable, Category = "MenuSystem")
-		void LoadEncounterPanel(class AICCharacter* Player);
+		class UEncounterPanel* LoadEncounterPanel(class AICCharacter* Player);
 
     UFUNCTION()
         virtual void SaveGame()override;

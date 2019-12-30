@@ -26,7 +26,7 @@ void UMenu::SetUp()
 	PlayerController->bShowMouseCursor = true;
 }
 
-void UMenu::TearDown()
+void UMenu::TearDown(bool bToggleInputMode)
 {
 	this->RemoveFromViewport();
 
@@ -35,7 +35,10 @@ void UMenu::TearDown()
 	APlayerController* PlayerController = World->GetFirstPlayerController();
 	if (!PlayerController) { return; }
 
-	FInputModeGameOnly InputModeData;
-	PlayerController->SetInputMode(InputModeData);
-	PlayerController->bShowMouseCursor = false;
+	if (bToggleInputMode)
+	{
+		FInputModeGameOnly InputModeData;
+		PlayerController->SetInputMode(InputModeData);
+		PlayerController->bShowMouseCursor = false;
+	}
 }

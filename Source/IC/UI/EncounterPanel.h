@@ -65,5 +65,5 @@ class IC_API UEncounterPanel : public UMenu
 
 public:
 	class AICCharacter* PlayerRef;
-
+	void ClosePanel();
 };

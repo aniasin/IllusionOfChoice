@@ -115,5 +115,8 @@ public:
 
 private:
 	void PositionCursorToWorld();
+	class UEncounterPanel* EncounterPanel;
+
+	void ToggleCameraBoom(bool bEncounter);
 
 };
