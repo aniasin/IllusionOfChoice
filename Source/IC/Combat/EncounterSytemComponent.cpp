@@ -46,8 +46,8 @@ void UEncounterSytemComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 // Starting point
 void UEncounterSytemComponent::StartEncounter()
 {
-	PlayerControllerRef->SetInputMode(FInputModeGameAndUI().SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock));
-	PlayerControllerRef->bShowMouseCursor = true;
+	//PlayerControllerRef->SetInputMode(FInputModeGameAndUI().SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock));
+	//PlayerControllerRef->bShowMouseCursor = true;
 
 	PositionGeneralViewCamera(155, PlayerRef, 900, 450);
 	PlayerControllerRef->SetViewTargetWithBlend(EncounterCamera, 0.8);

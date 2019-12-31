@@ -19,11 +19,11 @@ void UMenu::SetUp()
 	// Set InputMode UI only and show Mouse Cursor
 	APlayerController* PlayerController = World->GetFirstPlayerController();
 	if (!PlayerController) { return; }
-	FInputModeGameAndUI InputModeData;
-	InputModeData.SetWidgetToFocus(this->TakeWidget());
-	InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-	PlayerController->SetInputMode(InputModeData);
-	PlayerController->bShowMouseCursor = true;
+// 	FInputModeGameAndUI InputModeData;
+// 	InputModeData.SetWidgetToFocus(this->TakeWidget());
+// 	InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
+// 	PlayerController->SetInputMode(InputModeData);
+// 	PlayerController->bShowMouseCursor = false;
 }
 
 void UMenu::TearDown(bool bToggleInputMode)
@@ -37,8 +37,8 @@ void UMenu::TearDown(bool bToggleInputMode)
 
 	if (bToggleInputMode)
 	{
-		FInputModeGameOnly InputModeData;
-		PlayerController->SetInputMode(InputModeData);
-		PlayerController->bShowMouseCursor = false;
+// 		FInputModeGameOnly InputModeData;
+// 		PlayerController->SetInputMode(InputModeData);
+// 		PlayerController->bShowMouseCursor = false;
 	}
 }

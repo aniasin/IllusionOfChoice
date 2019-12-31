@@ -19,6 +19,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "Components/SphereComponent.h"
+#include "Engine/World.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AICCharacter
@@ -129,6 +130,7 @@ void AICCharacter::Click()
 		bWantToMove = false;
 		EncounterPanel->ClosePanel();
 		Cursor3DDecal->ToggleVisibility(false);
+		CursorComponent->SetWorldLocationAndRotation(GetActorLocation(), GetActorRotation());
 		NumberOfMove++;
 		if (NumberOfMove >= 1)
 		{
@@ -197,21 +199,15 @@ void AICCharacter::PositionCursorToWorld()
 {
 	if (bWantToMove && bCanMove && NumberOfMove <= 2)
 	{
-		FVector PlayerLocation = GetActorLocation();
-		APlayerController* PlayerController = Cast<APlayerController>(GetController());
 		FHitResult HitResult;
-
-		PlayerController->GetHitResultUnderCursor(ECC_Visibility, true, HitResult);
+		FVector TraceStart = FollowCamera->GetComponentLocation();
+		FVector TraceEnd = FollowCamera->GetForwardVector() * CharacterStatComponent->SpeedCurrent * 40 + TraceStart;
+		GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECC_Visibility);
 		FVector Location = HitResult.Location;
 		FVector Normal = HitResult.ImpactNormal;
-
-		if (FVector::Distance(PlayerLocation, Location) <= CharacterStatComponent->SpeedCurrent * 40)
-		{
-			LocationToMove = Location;
-			FRotator Rotation = UKismetMathLibrary::MakeRotationFromAxes(Normal, FVector(0,0,0), FVector(0,0,0));
-			CursorComponent->SetWorldLocationAndRotation(Location, Rotation);
-		}
-		
+		FRotator Rotation = UKismetMathLibrary::MakeRotationFromAxes(Normal, FVector(0, 0, 0), FVector(0, 0, 0));
+		CursorComponent->SetWorldLocationAndRotation(Location, Rotation);
+		LocationToMove = Location;
 	}
 }
 
