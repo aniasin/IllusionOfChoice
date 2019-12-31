@@ -29,7 +29,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "InventoryComponent")
 		class UInventoryComponent* InventoryComponent;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "EncounterComponent")
-		class UDecalComponent* CursorToWorldComponent;
+		class USphereComponent* CursorComponent;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "EncounterComponent")
+		class UDecalComponent* Cursor3DDecal;
 
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)

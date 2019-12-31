@@ -16,32 +16,6 @@ class IC_API UEncounterPanel : public UMenu
 
 		virtual bool Initialize()override;
 
-	UPROPERTY(meta = (BindWidget))
-		class UButton* Button_Tactic;
-
-	UPROPERTY(meta = (BindWidget))
-		class UButton* Button_Move;
-
-	UPROPERTY(meta = (BindWidget))
-		class UButton* Button_Action;
-	UPROPERTY(meta = (BindWidget))
-		class UButton* Button_Action01;
-	UPROPERTY(meta = (BindWidget))
-		class UButton* Button_Action02;
-	UPROPERTY(meta = (BindWidget))
-		class UButton* Button_Action03;
-
-	UPROPERTY(meta = (BindWidget))
-		class UVerticalBox* ActionPanel;
-
-	class UVerticalBox* CurrentPanel;
-
-	UPROPERTY(meta = (BindWidget))
-		class UButton* Button_Talk;
-
-	UPROPERTY(meta = (BindWidget))
-		class UButton* Button_EndTurn;
-
 	UFUNCTION()
 		void Panel_Tactic();
 
@@ -64,6 +38,40 @@ class IC_API UEncounterPanel : public UMenu
 		void Panel_EndTurn();
 
 public:
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+		class UButton* Button_Tactic;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+		class UButton* Button_Move;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+		class UButton* Button_Action;
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+		class UButton* Button_Action01;
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+		class UButton* Button_Action02;
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+		class UButton* Button_Action03;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+		class UVerticalBox* ActionPanel;
+
+	class UVerticalBox* CurrentPanel;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+		class UButton* Button_Talk;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+		class UButton* Button_EndTurn;
+
 	class AICCharacter* PlayerRef;
 	void ClosePanel();
+
+protected:
+	UPROPERTY(BlueprintReadWrite)
+	TArray<UButton*> Buttons;
+
+private:
+	void TogglePanel(UVerticalBox* Panel);
+	void ToggleCursorToMove();
 };

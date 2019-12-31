@@ -18,6 +18,7 @@
 #include "Components/DecalComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
+#include "Components/SphereComponent.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AICCharacter
@@ -58,10 +59,12 @@ AICCharacter::AICCharacter(const FObjectInitializer& ObjectInitializer)
 	EncounterComponent = CreateDefaultSubobject<UEncounterSytemComponent>(FName("EncounterComponent"));
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(FName("InventoryComponent"));
 
-	CursorToWorldComponent = CreateDefaultSubobject<UDecalComponent>(FName("CursorToWorldComponent"));
-	CursorToWorldComponent->SetupAttachment(RootComponent);
-	CursorToWorldComponent->DecalSize = FVector(16, 32, 32);
-	CursorToWorldComponent->SetVisibility(false);
+	CursorComponent = CreateDefaultSubobject<USphereComponent>(FName("Cursor3D"));
+	CursorComponent->SetupAttachment(RootComponent);
+	Cursor3DDecal = CreateDefaultSubobject<UDecalComponent>(FName("CursorDecal"));
+	Cursor3DDecal->SetupAttachment(CursorComponent);
+	Cursor3DDecal->SetVisibility(false);
+	Cursor3DDecal->DecalSize = FVector(16, 32, 32);
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
@@ -125,7 +128,7 @@ void AICCharacter::Click()
 
 		bWantToMove = false;
 		EncounterPanel->ClosePanel();
-		CursorToWorldComponent->ToggleVisibility(false);
+		Cursor3DDecal->ToggleVisibility(false);
 		NumberOfMove++;
 		if (NumberOfMove >= 1)
 		{
@@ -206,7 +209,7 @@ void AICCharacter::PositionCursorToWorld()
 		{
 			LocationToMove = Location;
 			FRotator Rotation = UKismetMathLibrary::MakeRotationFromAxes(Normal, FVector(0,0,0), FVector(0,0,0));
-			CursorToWorldComponent->SetWorldLocationAndRotation(Location, Rotation);
+			CursorComponent->SetWorldLocationAndRotation(Location, Rotation);
 		}
 		
 	}

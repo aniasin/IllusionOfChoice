@@ -16,5 +16,11 @@
 				"CoreUObject"
 			]
 		}
+	],
+	"Plugins": [
+		{
+			"Name": "GamepadUMGPlugin",
+			"Enabled": false
+		}
 	]
 }
