@@ -9,16 +9,16 @@ AICPlayerController::AICPlayerController()
 	PrimaryActorTick.bCanEverTick = true;
 
 	bIsUsingGamepad = false;
-	bResetGamepadDetectionAfterNoInput = true;
+	bResetGamepadDetectionAfterNoInput = false;
 	GamepadTimeout = 5.f;
 }
 
-bool AICPlayerController::InputAxis(FKey Key, float Delta, float DeltaTime, int32 NumSamples, bool bGamepad)
-{
-	bool ret = Super::InputAxis(Key, Delta, DeltaTime, NumSamples, bGamepad);
-	_UpdateGamepad(bGamepad);
-	return ret;
-}
+// bool AICPlayerController::InputAxis(FKey Key, float Delta, float DeltaTime, int32 NumSamples, bool bGamepad)
+// {
+// 	bool ret = Super::InputAxis(Key, Delta, DeltaTime, NumSamples, bGamepad);
+// 	_UpdateGamepad(bGamepad);
+// 	return ret;
+// }
 
 bool AICPlayerController::InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad)
 {

@@ -22,5 +22,10 @@ public:
 	void SetMenuInterface(IMenuInterface* MenuInterfaceToSet);
 	void SetUp();
 	void TearDown(bool bToggleInputMode);
+
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	void Keyboard(class AICPlayerController* PlayerController);
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	void Gamepad(class AICPlayerController* PlayerController);
 };
 	

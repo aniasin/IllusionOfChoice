@@ -1,4 +1,4 @@
-// SillikOne.
+// SillikOne. GamepadDetection courtesy of recursiveblueprint.fun.
 
 #pragma once
 
@@ -33,7 +33,7 @@ public:
 
 
 	// Overrides
-	virtual bool InputAxis(FKey Key, float Delta, float DeltaTime, int32 NumSamples, bool bGamepad) override;
+/*	virtual bool InputAxis(FKey Key, float Delta, float DeltaTime, int32 NumSamples, bool bGamepad) override;*/
 	virtual bool InputKey(FKey Key, EInputEvent EventType, float AmountDepressed, bool bGamepad) override;
 	virtual void PlayerTick(float DeltaTime) override;
 

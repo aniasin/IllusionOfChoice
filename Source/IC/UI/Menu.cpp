@@ -17,17 +17,16 @@ void UMenu::SetUp()
 	UWorld* World = GetWorld();
 	if (!World) { return; }
 	
-	// Set InputMode UI only and show Mouse Cursor
 	AICPlayerController* PlayerController = Cast<AICPlayerController>(World->GetFirstPlayerController());
 	if (!PlayerController) { return; }
 
 	if (PlayerController->bIsUsingGamepad)
 	{
-		FInputModeGameAndUI InputModeData;
-		InputModeData.SetWidgetToFocus(this->TakeWidget());
-		InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
-		PlayerController->SetInputMode(InputModeData);
-		PlayerController->bShowMouseCursor = true;
+		Gamepad(PlayerController);
+	}
+	else
+	{
+		Keyboard(PlayerController);
 	}
 }
 
@@ -42,8 +41,26 @@ void UMenu::TearDown(bool bToggleInputMode)
 
 	if (bToggleInputMode || PlayerController->bIsUsingGamepad)
 	{
-		FInputModeGameOnly InputModeData;
-		PlayerController->SetInputMode(InputModeData);
-		PlayerController->bShowMouseCursor = false;
+		Gamepad(PlayerController);
 	}
+	else
+	{
+		Keyboard(PlayerController);
+	}
+}
+
+void UMenu::Keyboard(class AICPlayerController* PlayerController)
+{
+	FInputModeGameAndUI InputModeData;
+	InputModeData.SetWidgetToFocus(this->TakeWidget());
+	InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
+	PlayerController->SetInputMode(InputModeData);
+	PlayerController->bShowMouseCursor = true;
+}
+
+void UMenu::Gamepad(class AICPlayerController* PlayerController)
+{
+	FInputModeGameOnly InputModeData;
+	PlayerController->SetInputMode(InputModeData);
+	PlayerController->bShowMouseCursor = false;
 }
