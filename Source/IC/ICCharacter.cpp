@@ -130,7 +130,7 @@ float AICCharacter::GetCurrentHealth() { return CharacterStatComponent->HealthCu
 
 void AICCharacter::Click()
 {
-	if (bWantToMove && bCanMove && NumberOfMove <= 2)
+	if (bWantToMove && bCanMove && LocationToMove != FVector(0,0,0) && NumberOfMove <= 2)
 	{
 		APlayerController* PlayerController = Cast<APlayerController>(GetController());
 		UAIBlueprintHelperLibrary::SimpleMoveToLocation(PlayerController, LocationToMove);
@@ -209,7 +209,7 @@ void AICCharacter::PositionCursorToWorld()
 	{
 		FHitResult HitResult;
 		FVector TraceStart = FollowCamera->GetComponentLocation();
-		float Distance = CharacterStatComponent->SpeedCurrent * 40 + GetWeaponReach();
+		float Distance = CharacterStatComponent->SpeedCurrent * 40 - GetWeaponReach();
 		FVector TraceEnd = FollowCamera->GetForwardVector() * Distance + TraceStart;
 		GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECC_Visibility);
 		FVector Location = HitResult.Location;
@@ -220,6 +220,10 @@ void AICCharacter::PositionCursorToWorld()
 		if (HitResult.IsValidBlockingHit())
 		{
 			LocationToMove = Location;
+		}
+		else
+		{
+			LocationToMove = FVector(0, 0, 0);
 		}
 	}
 }

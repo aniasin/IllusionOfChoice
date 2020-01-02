@@ -240,7 +240,7 @@ void UEncounterSytemComponent::AIDecision(AActor* AIActor, bool bIsPartyMember)
 			FVector LocationToMove;
 			LocationToMove = CurrentTarget->GetActorLocation() - Npc->GetActorLocation();
 			LocationToMove.Normalize();
-			float Distance = Npc->GetCurrentSpeed() * SpeedMultiplier + Npc->GetWeaponReach();
+			float Distance = Npc->GetCurrentSpeed() * SpeedMultiplier - Npc->GetWeaponReach();
 			LocationToMove = LocationToMove * Distance + Npc->GetActorLocation();
 			AIController->MoveToLocation(LocationToMove);
 		}
@@ -285,7 +285,7 @@ AActor* UEncounterSytemComponent::AIChooseWeakestReachableTarget(AActor* Instiga
 		{
 			float Distance = FVector::Distance(NpcSorted[i]->GetActorLocation(), PlayerParty->GetActorLocation());
 			// Choose the weaker reachable foe
-			if (Distance <= PlayerParty->GetCurrentSpeed() * SpeedMultiplier + PlayerParty->GetWeaponReach())
+			if (Distance <= PlayerParty->GetCurrentSpeed() * SpeedMultiplier - PlayerParty->GetWeaponReach())
 			{
 				CurrentTarget = NpcSorted[i];
 				break;
