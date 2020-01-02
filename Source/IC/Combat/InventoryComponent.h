@@ -25,12 +25,12 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Inventory")
-		TArray<AActor*> Items;
+		TArray <TSubclassOf<class AWeapon_Base>> Items;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Inventory")
-		TArray<AActor*> EquipedItems;
+		TSubclassOf<class AWeapon_Base> EquipedItems;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Inventory")
-		AActor* RHand;
+		TSubclassOf<class AWeapon_Base> RHand;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Inventory")
-		AActor* LHand;
+		TSubclassOf<class AWeapon_Base> LHand;
 		
 };

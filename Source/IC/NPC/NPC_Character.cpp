@@ -9,6 +9,7 @@
 #include "IC/Characters/CharacterStatComponent.h"
 #include "Components/SphereComponent.h"
 #include "IC/Combat/InventoryComponent.h"
+#include "IC/Weapons/Weapon_Base.h"
 
 // Sets default values
 ANPC_Character::ANPC_Character(const FObjectInitializer& ObjectInitializer)
@@ -51,6 +52,11 @@ void ANPC_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+}
+
+float ANPC_Character::GetWeaponReach()
+{
+	return InventoryComponent->RHand->GetDefaultObject<AWeapon_Base>()->Reach;
 }
 
 float ANPC_Character::GetCurrentSpeed()

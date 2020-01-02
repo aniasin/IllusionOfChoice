@@ -69,6 +69,8 @@ private:
 	int32 CurrentNpcTurn;
 	int32 NumberOfTurns;
 
+	float SpeedMultiplier = 40.0f;
+
 	UFUNCTION()
 		void DecideTurn();
 

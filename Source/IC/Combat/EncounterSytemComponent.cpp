@@ -219,8 +219,8 @@ void UEncounterSytemComponent::IncrementTurnsAndRounds(bool bIsPlayerParty)
 // AI
 void UEncounterSytemComponent::AIDecision(AActor* AIActor, bool bIsPartyMember)
 {
-	// TODO Simplify all doubles due to npc or Party members actors
 	AActor* CurrentTarget = NULL;
+	// PARTY MEMBER
 	if (bIsPartyMember)
 	{
 		CurrentTarget = AIChooseWeakestReachableTarget(AIActor, true);
@@ -236,15 +236,16 @@ void UEncounterSytemComponent::AIDecision(AActor* AIActor, bool bIsPartyMember)
 			AICCharacter* Npc = Cast<AICCharacter>(AIActor);
 			AAIController* AIController = Cast<AAIController>(Npc->GetController());
 			CurrentTarget = FindClosestFoe(Npc, true);
-			UE_LOG(LogTemp, Warning, TEXT("%s PURSUING %s"), *AIActor->GetName(), *CurrentTarget->GetName())
-				FVector LocationToMove;
+
+			FVector LocationToMove;
 			LocationToMove = CurrentTarget->GetActorLocation() - Npc->GetActorLocation();
 			LocationToMove.Normalize();
-			float Distance = Npc->GetCurrentSpeed() * 40;
+			float Distance = Npc->GetCurrentSpeed() * SpeedMultiplier + Npc->GetWeaponReach();
 			LocationToMove = LocationToMove * Distance + Npc->GetActorLocation();
 			AIController->MoveToLocation(LocationToMove);
 		}
 	}
+	// NPC
 	else
 	{
 		CurrentTarget = AIChooseWeakestReachableTarget(AIActor, false);
@@ -255,16 +256,16 @@ void UEncounterSytemComponent::AIDecision(AActor* AIActor, bool bIsPartyMember)
 			AIController->MoveToActor(CurrentTarget, 50);
 		}
 		else
-		// No weak Target reachable, choose the nearest foe
+			// No weak Target reachable, choose the nearest foe
 		{
 			ANPC_Character* Npc = Cast<ANPC_Character>(AIActor);
 			AAIController* AIController = Cast<AAIController>(Npc->GetController());
 			CurrentTarget = FindClosestFoe(Npc, false);
-			UE_LOG(LogTemp, Warning, TEXT("%s PURSUING %s"), *AIActor->GetName(), *CurrentTarget->GetName())
+
 			FVector LocationToMove;
 			LocationToMove = CurrentTarget->GetActorLocation() - Npc->GetActorLocation();
 			LocationToMove.Normalize();
-			float Distance = Npc->GetCurrentSpeed() * 40;
+			float Distance = Npc->GetCurrentSpeed() * SpeedMultiplier + Npc->GetWeaponReach();
 			LocationToMove = LocationToMove * Distance + Npc->GetActorLocation();
 			AIController->MoveToLocation(LocationToMove);
 		}
@@ -274,6 +275,7 @@ void UEncounterSytemComponent::AIDecision(AActor* AIActor, bool bIsPartyMember)
 AActor* UEncounterSytemComponent::AIChooseWeakestReachableTarget(AActor* Instigator, bool bIsPartyMember)
 {
 	AActor* CurrentTarget = NULL;
+	// PARTY MEMBER
 	if (bIsPartyMember)
 	{
 		TArray<ANPC_Character*>NpcSorted;
@@ -281,15 +283,16 @@ AActor* UEncounterSytemComponent::AIChooseWeakestReachableTarget(AActor* Instiga
 		NpcSorted = SortNpcByHealth(NpcTurnOrder);
 		for (int32 i = 0 ; i < NpcSorted.Num() ; i++)
 		{
-			float Distance = FVector::Distance(NpcSorted[i]->GetActorLocation(), Instigator->GetActorLocation());
+			float Distance = FVector::Distance(NpcSorted[i]->GetActorLocation(), PlayerParty->GetActorLocation());
 			// Choose the weaker reachable foe
-			if (Distance <= PlayerParty->GetCurrentSpeed() * 40)
+			if (Distance <= PlayerParty->GetCurrentSpeed() * SpeedMultiplier + PlayerParty->GetWeaponReach())
 			{
 				CurrentTarget = NpcSorted[i];
 				break;
 			}
 		}
 	}
+	// NPC
 	else
 	{
 		TArray<AICCharacter*>PlayersSorted;
@@ -298,9 +301,9 @@ AActor* UEncounterSytemComponent::AIChooseWeakestReachableTarget(AActor* Instiga
 		PlayersSorted = SortPlayersByHealth(PlayerTurnOrder);
 		for (int32 i = 0; i < PlayersSorted.Num(); i++)
 		{
-			float Distance = FVector::Distance(PlayersSorted[i]->GetActorLocation(), Instigator->GetActorLocation());
+			float Distance = FVector::Distance(PlayersSorted[i]->GetActorLocation(), Npc->GetActorLocation());
 			// Choose the weaker reachable foe
-			if (Distance <= Npc->GetCurrentSpeed() * 40)
+			if (Distance <= Npc->GetCurrentSpeed() * SpeedMultiplier + Npc->GetWeaponReach())
 			{
 				CurrentTarget = PlayersSorted[i];
 				break;
@@ -313,19 +316,21 @@ AActor* UEncounterSytemComponent::AIChooseWeakestReachableTarget(AActor* Instiga
 AActor* UEncounterSytemComponent::FindClosestFoe(AActor* Instigator, bool bIsPartyMember)
 {
 	AActor* CurrentTarget = NULL;
+	// PARTY MEMBER
 	if (bIsPartyMember)
 	{
 		AICCharacter* PlayerParty = Cast<AICCharacter>(Instigator);
 		TArray<ANPC_Character*>NpcToSort = PlayerRef->NpcEncounter;
 		for (int32 i = 0; i < NpcToSort.Num(); i++)
 		{
-			float Distance = FVector::Distance(NpcToSort[i]->GetActorLocation(), Instigator->GetActorLocation());
+			float Distance = FVector::Distance(NpcToSort[i]->GetActorLocation(), PlayerParty->GetActorLocation());
 			NpcToSort[i]->CurrentDistanceToQuerier = Distance;
 		}
 		TArray<ANPC_Character*>NearNpc = SortNpcByDistance(NpcToSort);
 		CurrentTarget = NearNpc[0];
 	}
 	else
+		// NPC
 	{
 		ANPC_Character* Npc = Cast<ANPC_Character>(Instigator);
 		TArray<AICCharacter*>PlayerToSort = PlayerRef->PlayerTeam;
@@ -458,8 +463,6 @@ void UEncounterSytemComponent::PositionGeneralViewCamera(float Angle, AActor* Fo
 
 void UEncounterSytemComponent::CameraGeneralView()
 {
-
-
 	World->GetTimerManager().ClearTimer(CameraTimerHandle);
 	PlayerControllerRef->SetViewTargetWithBlend(EncounterCamera, 0.8);
 }

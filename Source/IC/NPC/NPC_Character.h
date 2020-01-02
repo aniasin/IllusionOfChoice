@@ -38,6 +38,7 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "InventoryComponent")
 		class UInventoryComponent* InventoryComponent;
 
+	float GetWeaponReach();
 	float GetCurrentSpeed();
 	float GetCurrentHealth();
 	float CurrentDistanceToQuerier;

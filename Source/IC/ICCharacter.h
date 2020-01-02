@@ -103,6 +103,8 @@ public:
 	UPROPERTY()
 		TArray<class ANPC_Character*> NpcEncounter;
 
+	float GetWeaponReach();
+
 	float GetCurrentSpeed();
 	float GetCurrentHealth();
 	float CurrentDistanceToQuerier;

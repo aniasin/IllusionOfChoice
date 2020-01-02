@@ -20,6 +20,8 @@
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "Components/SphereComponent.h"
 #include "Engine/World.h"
+#include "IC/Weapons/Weapon_Base.h"
+#include "DrawDebugHelpers.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AICCharacter
@@ -61,11 +63,12 @@ AICCharacter::AICCharacter(const FObjectInitializer& ObjectInitializer)
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(FName("InventoryComponent"));
 
 	CursorComponent = CreateDefaultSubobject<USphereComponent>(FName("Cursor3D"));
+	CursorComponent->SetSphereRadius(64, true);
 	CursorComponent->SetupAttachment(RootComponent);
 	Cursor3DDecal = CreateDefaultSubobject<UDecalComponent>(FName("CursorDecal"));
 	Cursor3DDecal->SetupAttachment(CursorComponent);
 	Cursor3DDecal->SetVisibility(false);
-	Cursor3DDecal->DecalSize = FVector(16, 32, 32);
+	Cursor3DDecal->DecalSize = FVector(32, 64, 64);
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
@@ -115,6 +118,11 @@ void AICCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	PositionCursorToWorld();
+}
+
+float AICCharacter::GetWeaponReach()
+{
+	return InventoryComponent->RHand->GetDefaultObject<AWeapon_Base>()->Reach;
 }
 
 float AICCharacter::GetCurrentSpeed() {	return CharacterStatComponent->SpeedCurrent; }
@@ -201,13 +209,18 @@ void AICCharacter::PositionCursorToWorld()
 	{
 		FHitResult HitResult;
 		FVector TraceStart = FollowCamera->GetComponentLocation();
-		FVector TraceEnd = FollowCamera->GetForwardVector() * CharacterStatComponent->SpeedCurrent * 40 + TraceStart;
+		float Distance = CharacterStatComponent->SpeedCurrent * 40 + GetWeaponReach();
+		FVector TraceEnd = FollowCamera->GetForwardVector() * Distance + TraceStart;
 		GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECC_Visibility);
 		FVector Location = HitResult.Location;
 		FVector Normal = HitResult.ImpactNormal;
+
 		FRotator Rotation = UKismetMathLibrary::MakeRotationFromAxes(Normal, FVector(0, 0, 0), FVector(0, 0, 0));
 		CursorComponent->SetWorldLocationAndRotation(Location, Rotation);
-		LocationToMove = Location;
+		if (HitResult.IsValidBlockingHit())
+		{
+			LocationToMove = Location;
+		}
 	}
 }
 
